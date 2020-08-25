@@ -147,6 +147,7 @@ struct Config
 		cout<<"Core interior_points_normal_flag: "<<core.interior_points_normal_flag<<endl;
 		cout<<"Core shapes: "<<core.shapes<<endl;
 		cout<<"Core rho_inf: "<<core.rho_inf<<endl;
+		cout<<"Core pr_inf: "<<core.pr_inf<<endl;
 		cout<<"Core threadsperblock: "<<core.threadsperblock<<endl;
 		cout<<"Core gamma: "<<core.gamma<<endl;
 		cout<<"Core clcd_flag: "<<core.clcd_flag<<endl;
@@ -163,9 +164,10 @@ struct Config
 void meshfree_solver(char* file_name, int num_iters);
 //void getConfig(Json::Value &config);
 //void set_manual_config(std::map<char, char_float_map> &config);
+void getInitialPrimitive(Config configData, double primal[4]);
+void printPrimal(double primal[4]);
+double calculateTheta(Config configData);
 std::string readFile(char* file_name);
-
-
 
 int main(int argc, char **argv)
 {
@@ -288,6 +290,34 @@ std::string readFile(char* file_name)
 	return gridfile;
 }
 
+inline double deg2rad(double radians) {
+    return radians * (180.0 / M_PI);
+}
+
+double calculateTheta(Config configData)
+{
+	double theta = deg2rad(configData.core.aoa);
+	return theta;
+}
+
+void getInitialPrimitive(Config configData, double primal[4])
+{
+	primal[0] = configData.core.rho_inf;
+	double mach = configData.core.mach;
+	double machcos = mach * cos(calculateTheta(configData));
+	double machsin = mach * sin(calculateTheta(configData));
+	primal[1] = machcos;
+	primal[2] = machsin;
+	primal[3] = configData.core.pr_inf;
+}
+
+void printPrimal(double primal[4])
+{
+	cout<<"Printing Primal: "<<endl;
+	for(int i=0; i<4; i++)
+		cout<<std::fixed<<std::setprecision(20)<<primal[i]<<" ";
+	cout<<"\n";
+}
 
 void meshfree_solver(char* file_name, int max_iters)
 {
@@ -478,6 +508,14 @@ void meshfree_solver(char* file_name, int max_iters)
 	// cout<<std::fixed<<std::setprecision(22)<<"Check 2: "<<checkz<<endl;
 	// cout<<std::fixed<<std::setprecision(20)<<"Check 3: "<<checkz<<endl;
 
+	Point globalData[6000]; // it gives seg fault even for 7000 points
+	double res_old = 0.0;
+	double main_store[62] = {0};
+
+	double primal[4];
+	//cout<<"hi"<<endl;
+	getInitialPrimitive(configData, primal);
+	printPrimal(primal);
 
 
 }	
