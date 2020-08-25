@@ -377,43 +377,63 @@ void meshfree_solver(char* file_name, int max_iters)
 	// 	cout<<"No. of columns: "<<data.n_cols<<endl; 
 	// }
 
-	std::string gridfile = readFile(file_name);
+	//std::string gridfile = readFile(file_name);
 	//cout<<gridfile[0]<<endl<<gridfile[1]<<endl<<gridfile[2]<<endl;
-	int numPoints = 4878;
-	std::string new_file[numPoints];
+	int numPoints = 0;
 	std::fstream datafile(file_name, ios::in);
+	// if(datafile.is_open())
+	// {
+	// 	cout<<"File opened"<<endl;
+	// 	for(int i=0; i<5; i++)
+	// 	{
+	// 		getline(datafile, new_file[i]);
+	// 	}
+	// }
+	// for(int i=0; i<5; i++)
+	// {
+	// 	cout<<new_file[i]<<endl;
+	// }
 	if(datafile.is_open())
 	{
-		cout<<"File opened"<<endl;
-		for(int i=0; i<5; i++)
+		std::string temp;
+		getline(datafile, temp);
+		std::stringstream num(temp);
+		num >> numPoints;	
+	}
+
+	std::string new_file[numPoints], temp;
+	if(datafile.is_open())
+	{
+		for(int i=0; i<numPoints; i++)
 		{
 			getline(datafile, new_file[i]);
 		}
 	}
-	for(int i=0; i<5; i++)
-	{
-		cout<<new_file[i]<<endl;
-	}
-
-	cout<<new_file[1][0]<<endl;
+	datafile.close();
+	
+	//cout<<new_file[1][0]<<endl;
+	cout<<"No. of points: "<<numPoints<<endl;
 
 	std::regex ws_re("\\s+"); 
 	std::vector<vec_str> result;
-	for(int i=0; i<5; i++)
+	for(int i=0; i<numPoints; i++)
 	{ 
     	std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
     	result.push_back(temp);
-
     }
-    for(int j=0; j<5; j++)
+#if 0
+
+    for(int j=0; j<numPoints; j++)
     {
 		for (int i=0; i<result[j].size(); i++)
 			cout<<"Result: "<<j<<" " <<i<<" "<<result[j][i]<<endl;
 
 	}
+	
+#endif
 
 	std::vector<vec_doub> result_doub;
-	for(int j=0; j<5; j++)
+	for(int j=0; j<numPoints; j++)
     {
 		vec_doub temp;
 		for (int i=0; i<result[j].size(); i++)
@@ -421,13 +441,14 @@ void meshfree_solver(char* file_name, int max_iters)
 		result_doub.push_back(temp);
 
 	}
-
-	for(int j=0; j<5; j++)
+#if 0
+	for(int j=0; j<20; j++)
     {
 		for (int i=0; i<result_doub[j].size(); i++)
 			cout<<std::fixed<<std::setprecision(20)<<"Result Doub: "<<j<<" " <<i<<" "<<result_doub[j][i]<<endl;
 
 	}
+#endif
 
 	// std::vector<vec_ldoub> result_ldoub;
 	// for(int j=0; j<5; j++)
@@ -457,6 +478,6 @@ void meshfree_solver(char* file_name, int max_iters)
 	// cout<<std::fixed<<std::setprecision(22)<<"Check 2: "<<checkz<<endl;
 	// cout<<std::fixed<<std::setprecision(20)<<"Check 3: "<<checkz<<endl;
 
-	
+
 
 }	
