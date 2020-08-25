@@ -10,27 +10,37 @@
 #include<string>
 #include<iomanip>
 #include<limits>
+#include<string>
+#include<regex>
+#include <sstream>
 
+#define ARMA_DONT_PRINT_ERRORS
 using namespace arma;
 
 typedef std::map<char, float> char_float_map;
 typedef std::map<char, double> char_double_map;
+typedef std::vector<std::string> vec_str;
+typedef std::vector<double> vec_doub;
+typedef std::vector<long double> vec_ldoub;
 //typedef std::numeric_limits< double > dbl;
 
+bool debug_mode = true;
 
 struct Point
 {
 	int localID;
 	double x, y;
 	int left, right;
-	int flag_1, flag_2; //Int8 in the Julia code
+	int flag_1, flag_2; // Int8 in the Julia code
 	double short_distance;
 	int nbhs;
 	int conn[20];
 	double nx, ny;
+	// Size 4 (Pressure, vx, vy, density) x numberpts
 	double prim[4];
 	double flux_res[4];
 	double q[4];
+	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
 	double dq1[4];
 	double dq2[4];
 	double entropy;
@@ -71,16 +81,22 @@ struct Config
 		double gamma;
 		int clcd_flag;
 
+		Core() {}
+
 	};
 
 	struct PointConfig
 	{
 		int wall, interior, outer;
+
+		PointConfig() {}
 	};
 
 	struct Format
 	{
 		char* type;
+
+		Format() {}
 	};
 
 
@@ -144,9 +160,10 @@ struct Config
 	}
 };
 
-void meshfree_solver(char* filename, int num_iters);
+void meshfree_solver(char* file_name, int num_iters);
 //void getConfig(Json::Value &config);
 //void set_manual_config(std::map<char, char_float_map> &config);
+std::string readFile(char* file_name);
 
 
 
@@ -249,9 +266,32 @@ For reference:
 
 #endif
 
-
-void meshfree_solver(char* filename, int max_iters)
+std::string readFile(char* file_name)
 {
+	std::string gridfile, tp;
+
+	std::fstream datafile(file_name, ios::in);
+	if(datafile.is_open())
+	{
+		cout<<"File opened"<<endl;
+		//read the file
+		while(getline(datafile, tp))
+		{
+			//cout<<"Data File: \n"<<tp<<endl;
+			gridfile.append(tp);
+			gridfile.append("\n");
+		}
+	}
+	//cout<<"Grid file: \n"<<gridfile<<endl;
+	datafile.close();
+
+	return gridfile;
+}
+
+
+void meshfree_solver(char* file_name, int max_iters)
+{
+	//cout << std::setprecision(18);
 	//Json::Value configData = getConfig(Json::Value configData); // Assuming config file is located at "../config.json"
 	//std::cout << std::setprecision(17); // Show 17 digits of precision
 	//cout.precision(17);
@@ -318,6 +358,105 @@ void meshfree_solver(char* filename, int max_iters)
 
 	Config configData = Config();
 	configData.setConfig();
-	configData.printConfig();
+	if (debug_mode)
+		configData.printConfig();
 
-}
+	std::string format = configData.format.type;
+	if (debug_mode)
+		cout<<"Format: "<<format<<endl;
+
+	cout<<"Filename: "<<file_name<<endl;
+
+	// fmat data;
+	// bool load_ok = data.load(file_name);
+	// //int end = 1;
+	// //int numPoints = data.submat(0, 0, 0, end);
+	// if (debug_mode)
+	// {
+	// 	cout<<"No. of rows: "<<data.n_rows<<endl;
+	// 	cout<<"No. of columns: "<<data.n_cols<<endl; 
+	// }
+
+	std::string gridfile = readFile(file_name);
+	//cout<<gridfile[0]<<endl<<gridfile[1]<<endl<<gridfile[2]<<endl;
+	int numPoints = 4878;
+	std::string new_file[numPoints];
+	std::fstream datafile(file_name, ios::in);
+	if(datafile.is_open())
+	{
+		cout<<"File opened"<<endl;
+		for(int i=0; i<5; i++)
+		{
+			getline(datafile, new_file[i]);
+		}
+	}
+	for(int i=0; i<5; i++)
+	{
+		cout<<new_file[i]<<endl;
+	}
+
+	cout<<new_file[1][0]<<endl;
+
+	std::regex ws_re("\\s+"); 
+	std::vector<vec_str> result;
+	for(int i=0; i<5; i++)
+	{ 
+    	std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
+    	result.push_back(temp);
+
+    }
+    for(int j=0; j<5; j++)
+    {
+		for (int i=0; i<result[j].size(); i++)
+			cout<<"Result: "<<j<<" " <<i<<" "<<result[j][i]<<endl;
+
+	}
+
+	std::vector<vec_doub> result_doub;
+	for(int j=0; j<5; j++)
+    {
+		vec_doub temp;
+		for (int i=0; i<result[j].size(); i++)
+			temp.push_back(std::stod(result[j][i]));
+		result_doub.push_back(temp);
+
+	}
+
+	for(int j=0; j<5; j++)
+    {
+		for (int i=0; i<result_doub[j].size(); i++)
+			cout<<std::fixed<<std::setprecision(20)<<"Result Doub: "<<j<<" " <<i<<" "<<result_doub[j][i]<<endl;
+
+	}
+
+	// std::vector<vec_ldoub> result_ldoub;
+	// for(int j=0; j<5; j++)
+ //    {
+	// 	vec_ldoub temp;
+	// 	for (int i=0; i<result[j].size(); i++)
+	// 		temp.push_back(std::stold(result[j][i]));
+	// 	result_ldoub.push_back(temp);
+
+	// }
+
+	// for(int j=0; j<5; j++)
+ //    {
+	// 	for (int i=0; i<result_ldoub[j].size(); i++)
+	// 		cout<<"Result LDoub: "<<j<<" " <<i<<" "<<result_ldoub[j][i]<<endl;
+
+	// }
+
+	// //long double check = std::stold(result[4][9]);
+	// double check = std::stod(result[4][9]);
+	// cout<<std::fixed<<std::setprecision(25)<<"Check: "<<check<<endl;
+	// cout<<std::fixed<<std::setprecision(22)<<"Check 2: "<<check<<endl;
+	// cout<<std::fixed<<std::setprecision(20)<<"Check 3: "<<check<<endl<<endl;
+
+	// double checkz = std::stod(result[3][9]);
+	// cout<<std::fixed<<std::setprecision(25)<<"Check: "<<checkz<<endl;
+	// cout<<std::fixed<<std::setprecision(22)<<"Check 2: "<<checkz<<endl;
+	// cout<<std::fixed<<std::setprecision(20)<<"Check 3: "<<checkz<<endl;
+
+	
+
+}	
