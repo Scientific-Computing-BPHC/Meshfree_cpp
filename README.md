@@ -12,6 +12,7 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 Instructions to run:
 
 * clone the repo
+* cd `src`
 * run `./batchscript`
 
 Directory Structure: 
