@@ -66,3 +66,109 @@ xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my)
 
 	return std::make_tuple(nx, ny);
 }
+
+void calculateConnectivity(Point* globaldata, int idx)
+{
+	Point ptInterest = globaldata[idx];
+	double currx = ptInterest.x;
+    double curry = ptInterest.y;
+    double nx = ptInterest.nx;
+    double ny = ptInterest.ny;
+
+    int flag = ptInterest.flag_1;
+    double tx = ny;
+    double ty = -nx;
+    int xpos_nbhs = 0;
+    int xneg_nbhs = 0;
+    int ypos_nbhs = 0;
+    int yneg_nbhs = 0; 
+    int xpos_conn[20];
+    int ypos_conn[20];
+    int xneg_conn[20];
+    int yneg_conn[20];
+
+	for(int i=0; i<20; i++)
+	{
+		xpos_conn[i] = 0;
+		xneg_conn[i] = 0;
+		ypos_conn[i] = 0;
+		yneg_conn[i] = 0;
+	}	
+
+    /* Start Connectivity Generation */
+    for (int i=0; i<20; i++)
+    {
+    	int itm = ptInterest.conn[i];
+    	if (itm==0) 
+    	{
+    		//cout<<"\n Breaking"<<endl;
+    		break;
+    	}
+
+    	//cout<< "\n Unbroken \n";
+    	double itmx = globaldata[itm].x;
+    	double itmy = globaldata[itm].y;
+
+    	double delta_x = itmx - currx;
+    	double delta_y = itmy - curry;
+
+    	double delta_s = delta_x*tx + delta_y*ty;
+    	double delta_n = delta_x*nx + delta_y*ny;
+
+    	if(delta_s <= 0.0)
+    	{
+    		xpos_nbhs+=1;
+    		xpos_conn[itm] = xpos_nbhs;
+    	}
+
+    	if(delta_s >= 0.0)
+    	{
+    		xneg_nbhs+=1;
+    		xneg_conn[itm] = xneg_nbhs;
+    	}
+
+    	if(flag==1)
+    	{
+    		if(delta_n<=0.0)
+    		{
+    			ypos_nbhs+=1;
+    			ypos_conn[itm] = ypos_nbhs;
+    		}
+
+    		if(delta_n>=0.0)
+    		{
+    			yneg_nbhs+=1;
+    			yneg_conn[itm] = yneg_nbhs;
+    		}
+    	}
+
+    	else if (flag==0)
+    	{
+    		yneg_nbhs+=1;
+    		yneg_conn[itm] = yneg_nbhs;
+    	}
+
+    	else if (flag==2)
+    	{
+    		ypos_nbhs+=1;
+    		ypos_conn[itm] = ypos_nbhs;
+    	}
+    }
+    /* End Connectivity Generation */
+
+    //cout<<"\n Just Checking: "<<xpos_conn[0]<<endl;
+
+    for(int i=0; i<20; i++)
+    {
+    	globaldata[idx].xpos_conn[i] = 1;
+    	globaldata[idx].xneg_conn[i] = 1;
+    	globaldata[idx].ypos_conn[i] = 1;
+    	globaldata[idx].yneg_conn[i] = 1;
+    }
+
+    globaldata[idx].xpos_nbhs = xpos_nbhs;
+    globaldata[idx].xneg_nbhs = xneg_nbhs;
+    globaldata[idx].ypos_nbhs = ypos_nbhs;
+    globaldata[idx].yneg_nbhs = yneg_nbhs;	
+
+}

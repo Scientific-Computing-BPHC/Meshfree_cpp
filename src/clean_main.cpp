@@ -164,7 +164,11 @@ void meshfree_solver(char* file_name, int max_iters)
 		globaldata[idx].nbhs = (int)result_doub[idx][7];
 
 		for(int i=0; i<20; i++)
+		{
 			globaldata[idx].conn[i] = connectivity[i];
+			// (connectivity[i]!=0) cout<<"\n non-zero connectivity \n";
+		}
+
 
 		globaldata[idx].nx = 0.0;
 		globaldata[idx].ny = 0.0;
@@ -214,5 +218,9 @@ void meshfree_solver(char* file_name, int max_iters)
 		placeNormals(globaldata, idx, configData, interior, wall, outer);
 
 	cout<<"-----Start Connectivity Generation-----\n";
+	for(int idx=0; idx<numPoints; idx++)
+		calculateConnectivity(globaldata, idx);
+	cout<<"-----End Connectivity Generation-----\n";
+
 
 }	

@@ -167,5 +167,6 @@ void getInitialPrimitive(Config configData, double primal[4]);
 
 void placeNormals(Point* globaldata, int idx, Config configData, long long interior, long long wall, long long outer);
 xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
+void calculateConnectivity(Point* globaldata, int idx);
 
 #endif
