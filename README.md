@@ -10,6 +10,24 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 Instructions to run:
 
 * clone the repo
-* `./batchscript`
+* run `./batchscript`
+
+Directory Structure: 
+```
+.
++-- Meshfree_cpp
+|   +-- src
+    |		+-- clean_main.cpp
+    |		+-- clean_main.hpp
+    |		+-- core.cpp
+    |		+-- core.hpp
+    |		+-- utils.cpp
+    |		+-- utils.hpp
+    |		+-- checkFileRead.txt
+    |		+-- Makefile   
+|		+-- batchscript
+|		+-- README.md
+|		+-- LICENSE
+```
 
 
