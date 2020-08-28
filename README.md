@@ -17,17 +17,17 @@ Directory Structure:
 .
 +-- Meshfree_cpp
 |   +-- src
-|		+-- clean_main.cpp
-|		+-- clean_main.hpp
-|		+-- core.cpp
-|		+-- core.hpp
-|		+-- utils.cpp
-|		+-- utils.hpp
-|		+-- checkFileRead.txt
-|		+-- Makefile   
-|	+-- batchscript
-|	+-- README.md
-|	+-- LICENSE
+|		  +-- clean_main.cpp
+|		  +-- clean_main.hpp
+|		  +-- core.cpp
+|		  +-- core.hpp
+|		  +-- utils.cpp
+|		  +-- utils.hpp
+|		  +-- checkFileRead.txt
+|		  +-- Makefile   
+|	 +-- batchscript
+|	 +-- README.md
+|	 +-- LICENSE
 ```
 
 
