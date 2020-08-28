@@ -220,7 +220,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	cout<<"-----Start Connectivity Generation-----\n";
 	for(int idx=0; idx<numPoints; idx++)
 		calculateConnectivity(globaldata, idx);
-	cout<<"-----End Connectivity Generation-----\n";
+	cout<<"-----Connectivity Generation Done-----\n";  
 
 
 }	
