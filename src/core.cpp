@@ -95,7 +95,7 @@ void calculateConnectivity(Point* globaldata, int idx)
 		yneg_conn[i] = 0;
 	}	
 
-    /* Start Connectivity Generation */
+    // /* Start Connectivity Generation */
     for (int i=0; i<20; i++)
     {
     	int itm = ptInterest.conn[i];
@@ -118,13 +118,13 @@ void calculateConnectivity(Point* globaldata, int idx)
     	if(delta_s <= 0.0)
     	{
     		xpos_nbhs+=1;
-    		xpos_conn[itm] = xpos_nbhs;
+    		xpos_conn[xpos_nbhs] = itm;
     	}
 
     	if(delta_s >= 0.0)
     	{
     		xneg_nbhs+=1;
-    		xneg_conn[itm] = xneg_nbhs;
+    		xneg_conn[xpos_nbhs] = itm;
     	}
 
     	if(flag==1)
@@ -132,26 +132,26 @@ void calculateConnectivity(Point* globaldata, int idx)
     		if(delta_n<=0.0)
     		{
     			ypos_nbhs+=1;
-    			ypos_conn[itm] = ypos_nbhs;
+    			ypos_conn[ypos_nbhs] = itm;
     		}
 
     		if(delta_n>=0.0)
     		{
     			yneg_nbhs+=1;
-    			yneg_conn[itm] = yneg_nbhs;
+    			yneg_conn[yneg_nbhs] = itm;
     		}
     	}
 
     	else if (flag==0)
     	{
     		yneg_nbhs+=1;
-    		yneg_conn[itm] = yneg_nbhs;
+    		yneg_conn[yneg_nbhs] = itm;
     	}
 
     	else if (flag==2)
     	{
     		ypos_nbhs+=1;
-    		ypos_conn[itm] = ypos_nbhs;
+    		ypos_conn[ypos_nbhs] = itm;
     	}
     }
     /* End Connectivity Generation */
@@ -160,10 +160,10 @@ void calculateConnectivity(Point* globaldata, int idx)
 
     for(int i=0; i<20; i++)
     {
-    	globaldata[idx].xpos_conn[i] = 1;
-    	globaldata[idx].xneg_conn[i] = 1;
-    	globaldata[idx].ypos_conn[i] = 1;
-    	globaldata[idx].yneg_conn[i] = 1;
+    	globaldata[idx].xpos_conn[i] = xpos_conn[i];
+    	globaldata[idx].xneg_conn[i] = xneg_conn[i];
+    	globaldata[idx].ypos_conn[i] = ypos_conn[i];
+    	globaldata[idx].yneg_conn[i] = yneg_conn[i];
     }
 
     globaldata[idx].xpos_nbhs = xpos_nbhs;
