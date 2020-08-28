@@ -82,18 +82,10 @@ void calculateConnectivity(Point* globaldata, int idx)
     int xneg_nbhs = 0;
     int ypos_nbhs = 0;
     int yneg_nbhs = 0; 
-    int xpos_conn[20];
-    int ypos_conn[20];
-    int xneg_conn[20];
-    int yneg_conn[20];
-
-	for(int i=0; i<20; i++)
-	{
-		xpos_conn[i] = 0;
-		xneg_conn[i] = 0;
-		ypos_conn[i] = 0;
-		yneg_conn[i] = 0;
-	}	
+    int xpos_conn[20] = {0};
+    int ypos_conn[20] = {0};
+    int xneg_conn[20] = {0};
+    int yneg_conn[20] = {0};
 
     // /* Start Connectivity Generation */
     for (int i=0; i<20; i++)
@@ -172,3 +164,6 @@ void calculateConnectivity(Point* globaldata, int idx)
     globaldata[idx].yneg_nbhs = yneg_nbhs;	
 
 }
+
+
+

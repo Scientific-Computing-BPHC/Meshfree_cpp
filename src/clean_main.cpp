@@ -34,6 +34,8 @@ typedef std::vector<long double> vec_ldoub;
 bool debug_mode = true;
 
 void meshfree_solver(char* file_name, int num_iters);
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4], int max_iters);
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters);
 
 int main(int argc, char **argv)
 {
@@ -43,9 +45,11 @@ int main(int argc, char **argv)
 	srand (time(NULL));
 	arma_rng::set_seed_random();
 
-	meshfree_solver(argv[1], (int)argv[2]); //Warning: Casting from char to int loses precision
+	meshfree_solver(argv[1], std::stoi(argv[2])); //Warning: Casting from char to int loses precision
 	//Gotta see if maintaining a global array id efficient or if passing around by reference is efficient
 	//For all we know, maintaining a global data structure instead of passing it around might be more efficient
+
+	cout<<"\n Max Iters: "<<std::stoi(argv[2])<<endl;
 }
 
 void meshfree_solver(char* file_name, int max_iters)
@@ -130,7 +134,7 @@ void meshfree_solver(char* file_name, int max_iters)
 #endif
 
 	Point* globaldata = new Point[numPoints];
-	double res_old = 0.0;
+	double res_old[1] = {0.0};
 	double main_store[62] = {0};
 
 	double defprimal[4];
@@ -222,5 +226,46 @@ void meshfree_solver(char* file_name, int max_iters)
 		calculateConnectivity(globaldata, idx);
 	cout<<"-----Connectivity Generation Done-----\n";  
 
+	/* Copying appropriate values to main store */
+
+	main_store[52] = configData.core.power;
+	main_store[53] = configData.core.cfl;
+	main_store[54] = configData.core.limiter_flag; //Remember you may need to typecast this back to int later
+	main_store[55] = configData.core.vl_const;
+	main_store[56] = configData.core.aoa;
+	main_store[57] = configData.core.mach;
+	main_store[58] = configData.core.gamma;
+	main_store[59] = configData.core.pr_inf;
+	main_store[60] = configData.core.rho_inf;
+	main_store[61] = calculateTheta(configData);
+
+	cout<<"\n"<<max_iters+1<<endl;
+
+	test_code(globaldata, configData, res_old, numPoints, main_store, max_iters);
+
+	// Open the timer and print the timer that benchmarks all of these
+
+	cout<<" --------Done--------"<<endl;
 
 }	
+
+
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4], int max_iters)
+{
+	for (int i=0; i<max_iters; i++)
+	{
+		//fpi_solver(i, globaldata, configData, res_old, numPoints, main_store, tempdq);
+	}
+}
+
+
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters)
+{
+	cout<<"\n Starting warmup function \n";
+	res_old[0] = 0.0;
+
+	cout<<"\n Starting main function \n";
+	double tempdq[numPoints][2][4] = {0.0};
+
+	run_code(globaldata, configData, res_old, numPoints, main_store, tempdq, max_iters);
+}
