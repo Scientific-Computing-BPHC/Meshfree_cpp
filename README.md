@@ -25,9 +25,9 @@ Directory Structure:
 |		  +-- utils.hpp
 |		  +-- checkFileRead.txt
 |		  +-- Makefile   
-|	 +-- batchscript
-|	 +-- README.md
-|	 +-- LICENSE
+|	  +-- batchscript
+|	  +-- README.md
+|	  +-- LICENSE
 ```
 
 
