@@ -14,6 +14,7 @@
 #include<string>
 #include<regex>
 #include<sstream>
+#include<tuple>
 
 #define ARMA_DONT_PRINT_ERRORS
 using namespace arma;
@@ -23,6 +24,41 @@ typedef std::map<char, double> char_double_map;
 typedef std::vector<std::string> vec_str;
 typedef std::vector<double> vec_doub;
 typedef std::vector<long double> vec_ldoub;
+typedef std::tuple <double, double> xy_tuple;
+
+struct Point
+{
+	int localID;
+	double x, y;
+	int left, right;
+	int flag_1, flag_2; // Int8 in the Julia code
+	double short_distance;
+	int nbhs;
+	int conn[20];
+	double nx, ny;
+	// Size 4 (Pressure, vx, vy, density) x numberpts
+	double prim[4];
+	double flux_res[4];
+	double q[4];
+	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
+	double dq1[4];
+	double dq2[4];
+	double entropy;
+	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
+	int xpos_conn[20];
+	int xneg_conn[20];
+	int ypos_conn[20];
+	int yneg_conn[20];
+	double delta;
+	double max_q[4];
+	double min_q[4];
+	double prim_old[4];
+
+	//Point Constructor
+
+	Point() {}
+
+};
 
 struct Config
 {
@@ -128,5 +164,8 @@ struct Config
 double calculateTheta(Config configData);
 
 void getInitialPrimitive(Config configData, double primal[4]);
+
+void placeNormals(Point* globaldata, int idx, Config configData, long long interior, long long wall, long long outer);
+xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
 
 #endif

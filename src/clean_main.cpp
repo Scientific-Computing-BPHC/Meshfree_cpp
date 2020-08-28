@@ -16,9 +16,11 @@
 #include<string>
 #include<regex>
 #include<sstream>
+#include<tuple>
 
 #include "utils.hpp"
 #include "core.hpp"
+#include "point.hpp"
 
 #define ARMA_DONT_PRINT_ERRORS
 using namespace arma;
@@ -30,40 +32,6 @@ typedef std::vector<double> vec_doub;
 typedef std::vector<long double> vec_ldoub;
 
 bool debug_mode = true;
-
-struct Point
-{
-	int localID;
-	double x, y;
-	int left, right;
-	int flag_1, flag_2; // Int8 in the Julia code
-	double short_distance;
-	int nbhs;
-	int conn[20];
-	double nx, ny;
-	// Size 4 (Pressure, vx, vy, density) x numberpts
-	double prim[4];
-	double flux_res[4];
-	double q[4];
-	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
-	double dq1[4];
-	double dq2[4];
-	double entropy;
-	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
-	int xpos_conn[20];
-	int xneg_conn[20];
-	int ypos_conn[20];
-	int yneg_conn[20];
-	double delta;
-	double max_q[4];
-	double min_q[4];
-	double prim_old[4];
-
-	//Point Constructor
-
-	Point() {}
-
-};
 
 void meshfree_solver(char* file_name, int num_iters);
 
@@ -93,7 +61,7 @@ void meshfree_solver(char* file_name, int max_iters)
 		cout<<"Format: "<<format<<endl;
 
 	cout<<"Filename: "<<file_name<<endl;
-	cout<<"hi";
+	//cout<<"hi"<<endl;
 
 	int numPoints = 0;
 	std::fstream datafile(file_name, ios::in);
@@ -241,6 +209,10 @@ void meshfree_solver(char* file_name, int max_iters)
 	long long outer = configData.point_config.outer;
 
 
+	cout<<"\n-----Computing Normals-----\n";
+	for(int idx=0; idx<numPoints; idx++)
+		placeNormals(globaldata, idx, configData, interior, wall, outer);
 
+	cout<<"-----Start Connectivity Generation-----\n";
 
 }	
