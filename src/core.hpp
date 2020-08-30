@@ -166,7 +166,17 @@ double calculateTheta(Config configData);
 void getInitialPrimitive(Config configData, double primal[4]);
 
 void placeNormals(Point* globaldata, int idx, Config configData, long long interior, long long wall, long long outer);
+
 xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
+
 void calculateConnectivity(Point* globaldata, int idx);
+
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4]);
+
+void q_variables(Point* globaldata, int numPoints, double q_result[4]);
+
+void q_var_derivatives(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4]);
+
+void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4]);
 
 #endif

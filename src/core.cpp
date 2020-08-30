@@ -1,5 +1,10 @@
 #include "core.hpp"
 #include "point.hpp"
+#include "state_update.hpp"
+
+inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2]);
+inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
+inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int idx, double tempdq[][2][4]);
 
 inline double deg2rad(double radians) {
     return radians * (180.0 / M_PI);
@@ -165,5 +170,232 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 }
 
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4])
+{
+    if (iter == 1)
+        cout<<"Starting FuncDelta"<<endl;
 
+    double power = main_store[52];
+    double cfl = main_store[53];
 
+    func_delta(globaldata, numPoints, cfl);
+
+    double phi_i[4], phi_k[4], G_i[4], G_k[4], result[4], qtilde_i[4], qtilde_k[4];
+    double Gxp[4], Gxn[4], Gyp[4], Gyn[4], sig_del_x_del_f[4], sig_del_y_del_f[4];
+
+    for(int i=0; i<4; i++)
+        phi_i[i] = main_store[i];
+    for(int i=4; i<8; i++)
+        phi_k[i] = main_store[i];
+    for(int i=8; i<12; i++)
+        G_i[i] = main_store[i];
+    for(int i=12; i<16; i++)
+        G_k[i] = main_store[i];
+    for(int i=16; i<20; i++)
+        result[i] = main_store[i];
+    for(int i=20; i<24; i++)
+        qtilde_i[i] = main_store[i];
+    for(int i=24; i<28; i++)
+        qtilde_k[i] = main_store[i];
+    for(int i=28; i<32; i++)
+        Gxp[i] = main_store[i];
+    for(int i=32; i<36; i++)
+        Gxn[i] = main_store[i];
+    for(int i=36; i<40; i++)
+        Gyp[i] = main_store[i];
+    for(int i=40; i<44; i++)
+        Gyn[i] = main_store[i];
+    for(int i=44; i<48; i++)
+        sig_del_x_del_f[i] =main_store[i];
+    for(int i=48; i<52; i++)
+        sig_del_y_del_f[i] = main_store[i];
+
+    cout<<"\n Iteration Number: "<<iter<<endl;
+
+    for(int rk=0; rk<4; rk++)
+    {
+        q_variables(globaldata, numPoints, result);
+
+        q_var_derivatives(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
+
+        for(int inner_iters=0; inner_iters<3; inner_iters++)
+        {
+            q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
+        }
+    }
+}
+
+void q_variables(Point* globaldata, int numPoints, double q_result[4])
+{
+    for(int idx=0; idx<numPoints; idx++)
+    {
+        double rho = globaldata[idx].prim[0];
+        double u1 = globaldata[idx].prim[1];
+        double u2 = globaldata[idx].prim[2];
+        double pr = globaldata[idx].prim[3];
+        double beta = 0.5 * (rho/pr);
+        double two_times_beta = 2.0 * beta;
+        q_result[0] = log(rho) + log(beta) * 2.5 - (beta * ((u1 * u1) + (u2 * u2)));
+        q_result[1] = (two_times_beta * u1);
+        q_result[2] = (two_times_beta * u2);
+        q_result[3] = -two_times_beta;
+        for(int i=0; i<4; i++)
+            globaldata[idx].q[i] = q_result[i];
+    }
+}
+
+void q_var_derivatives(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4])
+{
+    for(int idx=0; idx<numPoints; idx++)
+    {
+        double x_i = globaldata[idx].x;
+        double y_i = globaldata[idx].y;
+        double sig_del_x_sqr = 0.0;
+        double sig_del_y_sqr = 0.0;
+        double sig_del_x_del_y = 0.0;
+
+        for(int i=0; i<4; i++)
+        {
+            sig_del_x_del_q[i] = 0.0;
+            sig_del_y_del_q[i] = 0.0;
+        }
+
+        for(int i=0; i<20; i++)
+        {
+            int conn = globaldata[idx].conn[i];
+            if(conn == 0) break;
+            double x_k = globaldata[conn].x;
+            double y_k = globaldata[conn].y;
+
+            double delta_x = x_k - x_i;
+            double delta_y = y_k - y_i;
+
+            double dist = hypot(delta_x, delta_y);
+            double weights = pow(dist, power);
+            sig_del_x_sqr += (delta_x * delta_x) * weights;
+            sig_del_y_sqr += (delta_y * delta_y) * weights;
+            sig_del_x_del_y += (delta_x * delta_y) * weights;
+
+            for(int iter=0; iter<4; iter++)
+            {
+                double intermediate_var = weights * (globaldata[conn].q[iter] - globaldata[idx].q[iter]);
+                sig_del_x_del_q[iter] += delta_x * intermediate_var;
+                sig_del_y_del_q[iter] += delta_y * intermediate_var;
+            }
+
+            for(int i=0; i<4; i++)
+            {
+                if (max_q[i] < globaldata[conn].q[i])
+                    max_q[i] = globaldata[conn].q[i];
+                if(min_q[i] > globaldata[conn].q[i])
+                    min_q[i] = globaldata[conn].q[i];
+            }
+
+            for(int i=0; i<4; i++)
+            {
+                globaldata[idx].max_q[i] = max_q[i];
+                globaldata[idx].min_q[i] = min_q[i];
+            }
+
+        }
+
+        q_var_derivatives_update(sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, sig_del_x_del_q, sig_del_y_del_q, max_q, min_q);
+
+        for(int i=0; i<4; i++)
+        {
+            globaldata[idx].dq1[i] = max_q[i];
+            globaldata[idx].dq2[i] = min_q[i];
+        }
+
+    }
+}
+
+inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2])
+{
+    double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
+    double one_by_det = 1.0/det;
+    for(int iter=0; iter<4; iter++)
+    {
+        dq1_store[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
+        dq2_store[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
+    }
+}
+
+void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4])
+{   
+    for(int idx=0; idx<numPoints; idx++)
+    {
+        double x_i = globaldata[idx].x;
+        double y_i = globaldata[idx].y;
+        double sig_del_x_sqr = 0.0;
+        double sig_del_y_sqr = 0.0;
+        double sig_del_x_del_y = 0.0;
+
+        for(int i=0; i<4; i++)
+        {
+            sig_del_x_del_q[i] = 0.0;
+            sig_del_y_del_q[i] = 0.0;
+        }
+
+        for(int i=0; i<20; i++)
+        {
+            int conn = globaldata[idx].conn[i];
+            if(conn == 0) break;
+            double x_k = globaldata[conn].x;
+            double y_k = globaldata[conn].y;
+
+            double delta_x = x_k - x_i;
+            double delta_y = y_k - y_i;
+
+            double dist = hypot(delta_x, delta_y);
+            double weights = pow(dist, power);
+            sig_del_x_sqr += (delta_x * delta_x) * weights;
+            sig_del_y_sqr += (delta_y * delta_y) * weights;
+            sig_del_x_del_y += (delta_x * delta_y) * weights;
+
+            q_var_derivatives_get_sum_delq_innerloop(globaldata, idx, conn, weights, delta_x, delta_y, qi_tilde, qk_tilde, sig_del_x_del_q, sig_del_y_del_q);
+
+            double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
+            double one_by_det = 1.0/det;
+
+            for(int iter =0; iter<4; iter++)
+            {
+                tempdq[idx][0][iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
+                tempdq[idx][1][iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
+            }
+
+            for(int idx=0; idx<numPoints; idx++)
+            {
+                q_var_derivatives_update_innerloop(qi_tilde, qk_tilde, idx, tempdq);
+                for(int i=0; i<4; i++)
+                {    
+                    globaldata[idx].dq1[i] = qi_tilde[i];
+                    globaldata[idx].dq2[i] = qk_tilde[i];
+                }
+            }
+
+        }
+    }
+}
+
+inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4])
+{
+    for(int iter=0; iter<4; iter++)
+    {
+        qi_tilde[iter] = globaldata[idx].q[iter] - 0.5 * (delta_x * globaldata[idx].dq1[iter] + delta_y * globaldata[idx].dq2[iter]);
+        qk_tilde[iter] = globaldata[conn].q[iter] - 0.5 * (delta_x * globaldata[conn].dq1[iter] + delta_y * globaldata[conn].dq2[iter]);
+
+        double intermediate_var = weights * (qk_tilde[iter] - qi_tilde[iter]);
+        sig_del_x_del_q[iter] += delta_x * intermediate_var;
+        sig_del_y_del_q[iter] += delta_y * intermediate_var;
+    }
+}
+
+inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int idx, double tempdq[][2][4])
+{
+    for(int iter=0; iter<4; iter++)
+    {
+        dq1[iter] = tempdq[idx][0][iter];
+        dq2[iter] = tempdq[idx][1][iter];
+    }
+}
