@@ -45,7 +45,7 @@ void wall_dGx_pos(Point* globaldata, int idx, double gamma, double phi_i[4], dou
         double det = sig_del_x_sqr * sig_del_y_sqr - sig_del_x_del_y * sig_del_x_del_y;
         double one_by_det = 1.0/det;
         for(int iter =0; iter<4; iter++)
-        	Gxp[iter] = (sig_del_x_del_f*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
+        	Gxp[iter] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
 
 	}
 

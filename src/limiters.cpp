@@ -103,7 +103,7 @@ inline void update_qtildes(double qtilde[4], double q[4], double dq1[4], double 
 	}
 }
 
-inline void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4], double G_k[4], double G_i[4], double delta_s_weights, double delta_n_weights)
+void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4], double G_k[4], double G_i[4], double delta_s_weights, double delta_n_weights)
 {
 	for(int iter=0; iter<4; iter++)
 	{
