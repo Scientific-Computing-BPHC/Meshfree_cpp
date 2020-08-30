@@ -1,6 +1,7 @@
 #include "core.hpp"
 #include "point.hpp"
 #include "state_update.hpp"
+#include "flux_residual.hpp"
 
 inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2]);
 inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
@@ -222,6 +223,9 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         {
             q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
         }
+
+        cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
+            result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
     }
 }
 
