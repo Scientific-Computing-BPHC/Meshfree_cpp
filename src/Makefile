@@ -6,7 +6,7 @@ LDFLAGS = -lm -larmadillo -lgomp
 CPPFLAGS  = -Wall -O2 -std=c++0x -fpermissive -I $(JSON_PATH)
 
 
-OBJ = clean_main.o core.o utils.o point.o state_update.o flux_residual.o
+OBJ = clean_main.o core.o utils.o point.o state_update.o flux_residual.o wall_fluxes.o limiters.o
 make: $(OBJ)
 	$(CPP) $(CPPFLAGS) -o clean_meshfree $(OBJ) $(LDFLAGS)
 

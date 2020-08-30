@@ -187,29 +187,29 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int i=0; i<4; i++)
         phi_i[i] = main_store[i];
     for(int i=4; i<8; i++)
-        phi_k[i] = main_store[i];
+        phi_k[i-4] = main_store[i];
     for(int i=8; i<12; i++)
-        G_i[i] = main_store[i];
+        G_i[i-8] = main_store[i];
     for(int i=12; i<16; i++)
-        G_k[i] = main_store[i];
+        G_k[i-12] = main_store[i];
     for(int i=16; i<20; i++)
-        result[i] = main_store[i];
+        result[i-16] = main_store[i];
     for(int i=20; i<24; i++)
-        qtilde_i[i] = main_store[i];
+        qtilde_i[i-20] = main_store[i];
     for(int i=24; i<28; i++)
-        qtilde_k[i] = main_store[i];
+        qtilde_k[i-24] = main_store[i];
     for(int i=28; i<32; i++)
-        Gxp[i] = main_store[i];
+        Gxp[i-28] = main_store[i];
     for(int i=32; i<36; i++)
-        Gxn[i] = main_store[i];
+        Gxn[i-32] = main_store[i];
     for(int i=36; i<40; i++)
-        Gyp[i] = main_store[i];
+        Gyp[i-36] = main_store[i];
     for(int i=40; i<44; i++)
-        Gyn[i] = main_store[i];
+        Gyn[i-40] = main_store[i];
     for(int i=44; i<48; i++)
-        sig_del_x_del_f[i] =main_store[i];
+        sig_del_x_del_f[i-44] =main_store[i];
     for(int i=48; i<52; i++)
-        sig_del_y_del_f[i] = main_store[i];
+        sig_del_y_del_f[i-48] = main_store[i];
 
     cout<<"\n Iteration Number: "<<iter<<endl;
 
