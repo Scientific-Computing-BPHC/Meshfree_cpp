@@ -115,17 +115,17 @@ inline void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4], do
 
 void qtilde_to_primitive(double result[4], double qtilde[4], double gamma)
 {
-    double beta = -qtilde[4]*0.5;
+    double beta = -qtilde[3]*0.5;
     double temp = 0.5/beta;
-    double u1 = qtilde[2]*temp;
-    double u2 = qtilde[3]*temp;
+    double u1 = qtilde[1]*temp;
+    double u2 = qtilde[2]*temp;
 
-    double temp1 = qtilde[1] + beta*(u1*u1 + u2*u2);
+    double temp1 = qtilde[0] + beta*(u1*u1 + u2*u2);
     double temp2 = temp1 - (log(beta)/(gamma-1));
     double rho = exp(temp2);
     double pr = rho*temp;
-    result[1] = u1;
-    result[2] = u2;
-    result[3] = rho;
-    result[4] = pr;
+    result[0] = u1;
+    result[1] = u2;
+    result[2] = rho;
+    result[3] = pr;
 }
