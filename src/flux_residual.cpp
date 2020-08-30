@@ -24,7 +24,7 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, doub
 void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
 	wall_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
-	//wall_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
+	wall_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
 	//wall_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn);
 
 	for(int i=0; i<4; i++)
