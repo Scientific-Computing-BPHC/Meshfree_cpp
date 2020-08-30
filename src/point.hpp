@@ -27,6 +27,7 @@ typedef std::vector<std::string> vec_str;
 typedef std::vector<double> vec_doub;
 typedef std::vector<long double> vec_ldoub;
 typedef std::tuple <double, double> xy_tuple;
+typedef std::tuple <double, double, double, double, double, double, double> conn_tuple;
 
 xy_tuple getxy(Point self);
 void setNormals(Point* globaldata, int idx, xy_tuple n);
