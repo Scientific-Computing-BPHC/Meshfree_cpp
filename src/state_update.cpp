@@ -61,6 +61,14 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 				state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk);
 			}
 		}
+		else if(globaldata[idx].flag_1 == 1)
+		{
+			for(int i=0; i<4; i++)
+			{
+				U[i] = 0.0;
+				state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk);
+			}
+		}
 	}
 }
 
@@ -114,6 +122,39 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
             U[iter] = U[iter] * 1/3 + Uold[iter] * 2/3;
     }
     //U[2] = 0.0;
+    double U2_rot = U[1];
+    double U3_rot = U[2];
+    U[1] = U2_rot*ny + U3_rot*nx;
+    U[2] = U3_rot*ny - U2_rot*nx;
+    double res_sqr = (U[0] - temp)*(U[0] - temp);
+
+    sig_res_sqr[0] += res_sqr;
+    Uold[0] = U[0];
+    temp = 1.0 / U[0];
+    Uold[1] = U[1]*temp;
+    Uold[2] = U[2]*temp;
+    Uold[3] = (0.4*U[3]) - ((0.2 * temp) * (U[1] * U[1] + U[2] * U[2]));
+    for(int i=0; i<4; i++)
+    	globaldata[idx].prim[i] = Uold[i];
+}
+
+void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], double rk)
+{
+    double nx = globaldata[idx].nx;
+    double ny = globaldata[idx].ny;
+
+    primitive_to_conserved(globaldata[idx].prim, nx, ny, U);
+    primitive_to_conserved(globaldata[idx].prim_old, nx, ny, Uold);
+
+    double temp = U[0];
+    for (int iter=0; iter<4; iter++)
+        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+    if (rk == 3)
+    {
+        for (int iter=0; iter<4; iter++)
+            U[iter] = U[iter] * 1/3 + Uold[iter] * 2/3;
+    }
+
     double U2_rot = U[1];
     double U3_rot = U[2];
     U[1] = U2_rot*ny + U3_rot*nx;
