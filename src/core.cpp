@@ -227,7 +227,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
             result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
-        //TO-DO: Add the State Update Function... 
+        state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
     }
 }
 
