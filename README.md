@@ -7,7 +7,7 @@ Kinetic Upwind Method (LSKUM), developed by Deshpande et. al.
 
 For access, please contact Dr. N. Anil, BITS Pilani.
 
-This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Department of Hyderabad, BITS-Pilani Hyderabad Campus. Nischay Ram Mamidi, Kumar Prasun and Rupanshu have developed the Python, Julia and Regent versions respectively.
+This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Department of Hyderabad, BITS-Pilani Hyderabad Campus. Nischay Ram Mamidi, Kumar Prasun, Srikanth and Rupanshu have developed the Python, Julia, Fortran and Regent versions respectively.
 
 Instructions to run:
 
