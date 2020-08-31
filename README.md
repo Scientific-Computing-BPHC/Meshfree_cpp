@@ -52,5 +52,16 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 |   +-- README.md
 |   +-- LICENSE
 ```
+## Roadmap:
+
+- [x] Serial Primal Code
+- [ ] Profile and Benchmark Serial Primal
+- [ ] Primal CUDA Parallel Version
+- [ ] Benchmark Primal CUDA Parallel on V100s
+- [ ] Serial Adjoint Code with CoDiPack
+- [ ] Benchmark Serial Adjoint Version
+- [ ] GPU Parallel Adjoint Solver
+- [ ] Benchmark Parallel Adjoint on V100s
+- [ ] Begin 3D Serial Primal 
 
 
