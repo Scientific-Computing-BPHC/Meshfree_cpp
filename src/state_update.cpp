@@ -70,6 +70,20 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			}
 		}
 	}
+
+	double res_new = sqrt(sig_res_sqr[0])/numPoints;
+	double residue = 0.0;
+
+	if(iter<=1)
+	{
+		res_old[0] = res_new;
+		residue = 0.0;
+	}
+	else
+		residue = log(res_new/res_old[0]);
+
+	if(rk == 3)
+		cout<<std::fixed<<std::setprecision(17)<<"Residue: "<<iter+1<<" "<<residue<<endl;
 }
 
 void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], double rk)
