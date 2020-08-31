@@ -27,10 +27,10 @@ void flux_quad_GxII(double G[4], double nx, double ny, double u1, double u2, dou
     temp2 = un*A2neg - B2;
     G[2] = rho*temp1*temp2;
 
-    temp1 = (7 *pr_by_rho) + u_sqr;
+    temp1 = (7.0 *pr_by_rho) + u_sqr;
     temp2 = 0.5*ut*temp1*A1pos;
 
-    temp1 = (6 *pr_by_rho) + u_sqr;
+    temp1 = (6.0 * pr_by_rho) + u_sqr;
     double temp3 = 0.5*B1*temp1;
 
     temp1 = ut*A1pos + B1;

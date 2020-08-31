@@ -39,7 +39,7 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 
 int main(int argc, char **argv)
 {
-	printf("Meshfree AD\n");
+	printf("\nMeshfree AD\n");
 
 	/* initialize random seed*/
 	srand (time(NULL));
@@ -62,9 +62,9 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	std::string format = configData.format.type;
 	if (debug_mode)
-		cout<<"Format: "<<format<<endl;
+		cout<<"\nFormat: "<<format<<endl;
 
-	cout<<"Filename: "<<file_name<<endl;
+	cout<<"F\nilename: "<<file_name<<endl;
 	//cout<<"hi"<<endl;
 
 	int numPoints = 0;
@@ -89,7 +89,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	datafile.close();
 	
 	//cout<<new_file[1][0]<<endl;
-	cout<<"No. of points: "<<numPoints<<endl;
+	cout<<"\nNo. of points: "<<numPoints<<endl;
 
 	std::regex ws_re("\\s+"); 
 	std::vector<vec_str> result;
@@ -139,9 +139,9 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	double defprimal[4];
 	getInitialPrimitive(configData, defprimal);
-	printPrimal(defprimal);
+	//printPrimal(defprimal);
 
-	cout<<"-----Start Read-----"<<endl; // readFile function in Julia
+	cout<<"\n-----Start Read-----\n"<<endl; // readFile function in Julia
 
 	//cout<<result_doub[0][0]<<endl;
 
@@ -208,7 +208,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	}
 
-	cout<<"-----End Read-----"<<endl;
+	cout<<"\n-----End Read-----\n"<<endl;
 
 	// Interior, Out and Wall were defined as Int64 in Julia, so am defining them as long long
 
@@ -245,7 +245,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	// Open the timer and print the timer that benchmarks all of these
 
-	cout<<" --------Done--------"<<endl;
+	cout<<"\n--------Done--------\n"<<endl;
 
 }	
 

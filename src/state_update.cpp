@@ -100,7 +100,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
     if (rk == 3)
     {
         for (int iter=0; iter<4; iter++)
-            U[iter] = U[iter] * 1/3 + Uold[iter] * 2/3;
+            U[iter] = U[iter] * 1.0/3.0 + Uold[iter] * 2.0/3.0;
     }
     U[2] = 0.0;
     double U2_rot = U[1];
@@ -133,7 +133,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
     if (rk == 3)
     {
         for (int iter=0; iter<4; iter++)
-            U[iter] = U[iter] * 1/3 + Uold[iter] * 2/3;
+            U[iter] = U[iter] * 1.0/3.0 + Uold[iter] * 2.0/3.0;
     }
     //U[2] = 0.0;
     double U2_rot = U[1];
@@ -166,7 +166,7 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
     if (rk == 3)
     {
         for (int iter=0; iter<4; iter++)
-            U[iter] = U[iter] * 1/3 + Uold[iter] * 2/3;
+            U[iter] = U[iter] * 1.0/3.0 + Uold[iter] * 2.0/3.0;
     }
 
     double U2_rot = U[1];
@@ -212,7 +212,7 @@ inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double n
 
     double beta = (0.5 * rho_inf)/pr_inf;
     double S2 = u2_inf_rot * sqrt(beta);
-    double B2_inf = exp(-S2*S2)/(2*sqrt(M_PI*beta));
+    double B2_inf = exp(-S2*S2)/(2.0*sqrt(M_PI*beta));
     double A2n_inf = 0.5 * (1 - erf(S2));
 
     double rho = globaldata_prim[0];
@@ -226,10 +226,10 @@ inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double n
     temp1 = (u1_rot*u1_rot + u2_rot*u2_rot);
     double e = (pr/(rho*(gamma-1))) + 0.5*(temp1);
 
-    beta = (rho)/(2*pr);
+    beta = (rho)/(2.0*pr);
     S2 = u2_rot*sqrt(beta);
-    double B2 = exp(-S2*S2)/(2*sqrt(M_PI*beta));
-    double A2p = 0.5*(1 + erf(S2));
+    double B2 = exp(-S2*S2)/(2.0*sqrt(M_PI*beta));
+    double A2p = 0.5*(1.0 + erf(S2));
 
     Ubar[0] = (rho_inf*A2n_inf) + (rho*A2p);
 
