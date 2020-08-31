@@ -173,7 +173,7 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4])
 {
-    if (iter == 1)
+    if (iter == 0)
         cout<<"Starting FuncDelta"<<endl;
 
     double power = main_store[52];
@@ -211,7 +211,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int i=48; i<52; i++)
         sig_del_y_del_f[i-48] = main_store[i];
 
-    cout<<"\n Iteration Number: "<<iter<<endl;
+    cout<<"\n Iteration Number: "<<iter+1<<endl;
 
     for(int rk=0; rk<4; rk++)
     {
@@ -224,8 +224,12 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
             q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
         }
 
+        cout<<"\nCalculating Flux Residual\n";
+
         cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
             result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
+
+        cout<<"\nDone Calculating Flux Residual\n";
 
         state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
     }
@@ -233,6 +237,9 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
 void q_variables(Point* globaldata, int numPoints, double q_result[4])
 {
+    cout<<"\nInside q_variables\n";
+    cout<<"\nSecond Check for No. Of Points: "<<numPoints<<endl;
+
     for(int idx=0; idx<numPoints; idx++)
     {
         double rho = globaldata[idx].prim[0];
@@ -248,10 +255,13 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
         for(int i=0; i<4; i++)
             globaldata[idx].q[i] = q_result[i];
     }
+    cout<<"\nGoing outta q_variables\n";
 }
 
 void q_var_derivatives(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4])
 {
+    cout<<"\nInside q_var_derivatives\n";
+
     for(int idx=0; idx<numPoints; idx++)
     {
         double x_i = globaldata[idx].x;
@@ -314,6 +324,7 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
         }
 
     }
+    cout<<"\nGoing outta q_var_derivatives\n";
 }
 
 inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2])

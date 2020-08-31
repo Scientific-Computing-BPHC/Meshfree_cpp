@@ -254,17 +254,17 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 {
 	for (int i=0; i<max_iters; i++)
 	{
-		//fpi_solver(i, globaldata, configData, res_old, numPoints, main_store, tempdq);
+		fpi_solver(i, globaldata, configData, res_old, numPoints, main_store, tempdq);
 	}
 }
 
 
 void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters)
 {
-	cout<<"\n Starting warmup function \n";
+	cout<<"\nStarting warmup function \n";
 	res_old[0] = 0.0;
 
-	cout<<"\n Starting main function \n";
+	cout<<"\nStarting main function \n";
 	double tempdq[numPoints][2][4] = {0.0};
 
 	run_code(globaldata, configData, res_old, numPoints, main_store, tempdq, max_iters);
