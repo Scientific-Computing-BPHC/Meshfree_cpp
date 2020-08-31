@@ -9,6 +9,10 @@ For access, please contact Dr. N. Anil, BITS Pilani.
 
 This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Department of Hyderabad, BITS-Pilani Hyderabad Campus. Nischay Ram Mamidi, Kumar Prasun, Srikanth and Rupanshu have developed the Python, Julia, Fortran and Regent versions respectively.
 
+Dependencies:
+* gcc 8.3.0 or higher
+* armadillo 9.900.2
+
 Instructions to run:
 
 * clone the repo
@@ -26,6 +30,22 @@ Directory Structure:
 |      +-- core.hpp
 |      +-- utils.cpp
 |      +-- utils.hpp
+|      +-- split_fluxes.cpp
+|      +-- split_fluxes.hpp
+|      +-- quadrant_fluxes.cpp
+|      +-- quadrant_fluxes.hpp
+|      +-- state_update.cpp
+|      +-- state_update.hpp
+|      +-- flux_residual.cpp
+|      +-- flux_residual.hpp
+|      +-- limiters.cpp
+|      +-- limiters.hpp
+|      +-- wall_fluxes.cpp
+|      +-- wall_fluxes.hpp
+|      +-- point.cpp
+|      +-- point.hpp
+|      +-- file.cpp
+|      +-- file.hpp
 |      +-- checkFileRead.txt
 |      +-- Makefile   
 |   +-- batchscript
