@@ -238,7 +238,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 void q_variables(Point* globaldata, int numPoints, double q_result[4])
 {
     cout<<"\nInside q_variables\n";
-    cout<<"\nSecond Check for No. Of Points: "<<numPoints<<endl;
+    //cout<<"\nSecond Check for No. Of Points: "<<numPoints<<endl;
 
     for(int idx=0; idx<numPoints; idx++)
     {
@@ -340,6 +340,8 @@ inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr,
 
 void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4])
 {   
+    cout<<"\nInside q_var_derivatives Inner\n";
+
     for(int idx=0; idx<numPoints; idx++)
     {
         double x_i = globaldata[idx].x;
@@ -356,6 +358,7 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
 
         for(int i=0; i<20; i++)
         {
+            //cout<<i<<" ";
             int conn = globaldata[idx].conn[i];
             if(conn == 0) break;
             double x_k = globaldata[conn].x;
@@ -393,6 +396,7 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
 
         }
     }
+    cout<<"\nOutta q_var_derivatives Inner\n";
 }
 
 inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4])
