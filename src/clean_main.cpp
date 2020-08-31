@@ -141,7 +141,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	getInitialPrimitive(configData, defprimal);
 	//printPrimal(defprimal);
 
-	cout<<"\n-----Start Read-----\n"<<endl; // readFile function in Julia
+	cout<<"\n-----Start Read-----\n"; // readFile function in Julia
 
 	//cout<<result_doub[0][0]<<endl;
 
@@ -208,7 +208,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	}
 
-	cout<<"\n-----End Read-----\n"<<endl;
+	cout<<"\n-----End Read-----\n";
 
 	// Interior, Out and Wall were defined as Int64 in Julia, so am defining them as long long
 
@@ -221,10 +221,10 @@ void meshfree_solver(char* file_name, int max_iters)
 	for(int idx=0; idx<numPoints; idx++)
 		placeNormals(globaldata, idx, configData, interior, wall, outer);
 
-	cout<<"-----Start Connectivity Generation-----\n";
+	cout<<"\n-----Start Connectivity Generation-----\n";
 	for(int idx=0; idx<numPoints; idx++)
 		calculateConnectivity(globaldata, idx);
-	cout<<"-----Connectivity Generation Done-----\n";  
+	cout<<"\n-----Connectivity Generation Done-----\n";  
 
 	/* Copying appropriate values to main store */
 

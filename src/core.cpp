@@ -174,7 +174,7 @@ void calculateConnectivity(Point* globaldata, int idx)
 void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4])
 {
     if (iter == 0)
-        cout<<"Starting FuncDelta"<<endl;
+        cout<<"\nStarting FuncDelta"<<endl;
 
     double power = main_store[52];
     double cfl = main_store[53];
@@ -211,7 +211,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int i=48; i<52; i++)
         sig_del_y_del_f[i-48] = main_store[i];
 
-    cout<<"\n Iteration Number: "<<iter+1<<endl;
+    cout<<"\nIteration Number: "<<iter+1<<endl;
 
     for(int rk=0; rk<4; rk++)
     {
