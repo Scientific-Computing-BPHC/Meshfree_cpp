@@ -64,7 +64,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	if (debug_mode)
 		cout<<"\nFormat: "<<format<<endl;
 
-	cout<<"F\nilename: "<<file_name<<endl;
+	cout<<"\nFilename: "<<file_name<<endl;
 	//cout<<"hi"<<endl;
 
 	int numPoints = 0;
