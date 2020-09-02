@@ -72,6 +72,12 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 	}
 
 	double res_new = sqrt(sig_res_sqr[0])/numPoints;
+    if(res_new!=res_new)
+    {
+        cout<<"\nRes_New is Nan\n";
+        cout<<"sig_res_sqr is: "<<sig_res_sqr[0]<<"\n";
+        exit(0);
+    }
 	double residue = 0.0;
 
 	if(iter<=1)
@@ -86,7 +92,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 		cout<<std::fixed<<std::setprecision(17)<<"\nResidue: "<<iter+1<<" "<<residue<<endl;
 }
 
-void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], double rk)
+void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -97,7 +103,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
         U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
-    if (rk == 3)
+    if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
             U[iter] = U[iter] * 1.0/3.0 + Uold[iter] * 2.0/3.0;
@@ -119,7 +125,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
     	globaldata[idx].prim[i] = Uold[i];
 }
 
-void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], double rk)
+void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -130,7 +136,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
         U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
-    if (rk == 3)
+    if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
             U[iter] = U[iter] * 1.0/3.0 + Uold[iter] * 2.0/3.0;
@@ -152,7 +158,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
     	globaldata[idx].prim[i] = Uold[i];
 }
 
-void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], double rk)
+void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -163,7 +169,7 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
         U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
-    if (rk == 3)
+    if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
             U[iter] = U[iter] * 1.0/3.0 + Uold[iter] * 2.0/3.0;

@@ -147,7 +147,9 @@ void meshfree_solver(char* file_name, int max_iters)
 	//cout<<result_doub[0][0]<<endl;
 
 
+/* Read File Old */
 
+#if 0
 	for(int idx=0; idx<numPoints; idx++)
 	{
 
@@ -212,6 +214,77 @@ void meshfree_solver(char* file_name, int max_iters)
 	}
 
 	cout<<"\n-----End Read-----\n";
+
+#endif
+
+/* Read File Quadtree */
+
+	for(int idx=0; idx<numPoints; idx++)
+	{
+
+		int connectivity[20] = {0};
+		for(int iter=11; iter<result_doub[idx].size(); iter++)
+		{
+			connectivity[iter-11] = result_doub[idx][iter];
+		}
+
+		// Assign values to each of the elements of global data
+		// Make sure the types specifications are adhered to
+
+		globaldata[idx].localID = idx;
+		globaldata[idx].x = result_doub[idx][0];
+		globaldata[idx].y = result_doub[idx][1];
+		globaldata[idx].left = (int)result_doub[idx][2];
+		globaldata[idx].right = (int)result_doub[idx][3];
+		globaldata[idx].flag_1 = (int)result_doub[idx][4];
+		globaldata[idx].flag_2 = (int)result_doub[idx][5];
+		globaldata[idx].short_distance = result_doub[idx][10];
+		globaldata[idx].nbhs = (int)result_doub[idx][11];
+
+		for(int i=0; i<20; i++)
+		{
+			globaldata[idx].conn[i] = connectivity[i];
+			// (connectivity[i]!=0) cout<<"\n non-zero connectivity \n";
+		}
+
+
+		globaldata[idx].nx = result_doub[idx][6];
+		globaldata[idx].ny = result_doub[idx][7];
+
+		for(int i=0; i<4; i++)
+		{
+			globaldata[idx].prim[i] = defprimal[i];
+			globaldata[idx].flux_res[i] = 0.0;
+			globaldata[idx].q[i] = 0.0;
+			globaldata[idx].dq1[i] = 0.0;
+			globaldata[idx].dq2[i] = 0.0;
+			globaldata[idx].max_q[i] = 0.0;
+			globaldata[idx].min_q[i] = 0.0;
+			globaldata[idx].prim_old[i] = 0.0;
+		}
+
+		globaldata[idx].xpos_nbhs = 0;
+		globaldata[idx].xneg_nbhs = 0;
+		globaldata[idx].ypos_nbhs = 0;
+		globaldata[idx].yneg_nbhs = 0;
+
+		globaldata[idx].entropy = 0.0;
+		globaldata[idx].delta = 0.0;
+
+
+		for(int i=0; i<20; i++)
+		{
+			globaldata[idx].xpos_conn[i] = 0;
+			globaldata[idx].xneg_conn[i] = 0;
+			globaldata[idx].ypos_conn[i] = 0;
+			globaldata[idx].yneg_conn[i] = 0;
+		}
+
+	}
+
+	cout<<"\n-----End Read-----\n";
+
+
 
 	// Interior, Out and Wall were defined as Int64 in Julia, so am defining them as long long
 

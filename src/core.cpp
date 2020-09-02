@@ -116,41 +116,47 @@ void calculateConnectivity(Point* globaldata, int idx)
 
     	if(delta_s <= 0.0)
     	{
-    		xpos_nbhs+=1;
+    		
     		xpos_conn[xpos_nbhs] = itm;
+            xpos_nbhs+=1;
     	}
 
     	if(delta_s >= 0.0)
     	{
-    		xneg_nbhs+=1;
+    		
     		xneg_conn[xpos_nbhs] = itm;
+            xneg_nbhs+=1;
     	}
 
     	if(flag==1)
     	{
     		if(delta_n<=0.0)
     		{
-    			ypos_nbhs+=1;
+    			
     			ypos_conn[ypos_nbhs] = itm;
+                ypos_nbhs+=1;
     		}
 
     		if(delta_n>=0.0)
     		{
-    			yneg_nbhs+=1;
+    			
     			yneg_conn[yneg_nbhs] = itm;
+                yneg_nbhs+=1;
     		}
     	}
 
     	else if (flag==0)
     	{
-    		yneg_nbhs+=1;
+    		
     		yneg_conn[yneg_nbhs] = itm;
+            yneg_nbhs+=1;
     	}
 
     	else if (flag==2)
     	{
-    		ypos_nbhs+=1;
+    		
     		ypos_conn[ypos_nbhs] = itm;
+            ypos_nbhs+=1;
     	}
     }
     /* End Connectivity Generation */
@@ -182,42 +188,64 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
     func_delta(globaldata, numPoints, cfl);
 
-    double phi_i[4], phi_k[4], G_i[4], G_k[4], result[4], qtilde_i[4], qtilde_k[4];
-    double Gxp[4], Gxn[4], Gyp[4], Gyn[4], sig_del_x_del_f[4], sig_del_y_del_f[4];
+    // double phi_i[4], phi_k[4], G_i[4], G_k[4], result[4], qtilde_i[4], qtilde_k[4];
+    // double Gxp[4], Gxn[4], Gyp[4], Gyn[4], sig_del_x_del_f[4], sig_del_y_del_f[4];
 
-    for(int i=0; i<4; i++)
-        phi_i[i] = main_store[i];
-    for(int i=4; i<8; i++)
-        phi_k[i-4] = main_store[i];
-    for(int i=8; i<12; i++)
-        G_i[i-8] = main_store[i];
-    for(int i=12; i<16; i++)
-        G_k[i-12] = main_store[i];
-    for(int i=16; i<20; i++)
-        result[i-16] = main_store[i];
-    for(int i=20; i<24; i++)
-        qtilde_i[i-20] = main_store[i];
-    for(int i=24; i<28; i++)
-        qtilde_k[i-24] = main_store[i];
-    for(int i=28; i<32; i++)
-        Gxp[i-28] = main_store[i];
-    for(int i=32; i<36; i++)
-        Gxn[i-32] = main_store[i];
-    for(int i=36; i<40; i++)
-        Gyp[i-36] = main_store[i];
-    for(int i=40; i<44; i++)
-        Gyn[i-40] = main_store[i];
-    for(int i=44; i<48; i++)
-        sig_del_x_del_f[i-44] =main_store[i];
-    for(int i=48; i<52; i++)
-        sig_del_y_del_f[i-48] = main_store[i];
+    // for(int i=0; i<4; i++)
+    //     phi_i[i] = main_store[i];
+    // for(int i=4; i<8; i++)
+    //     phi_k[i-4] = main_store[i];
+    // for(int i=8; i<12; i++)
+    //     G_i[i-8] = main_store[i];
+    // for(int i=12; i<16; i++)
+    //     G_k[i-12] = main_store[i];
+    // for(int i=16; i<20; i++)
+    //     result[i-16] = main_store[i];
+    // for(int i=20; i<24; i++)
+    //     qtilde_i[i-20] = main_store[i];
+    // for(int i=24; i<28; i++)
+    //     qtilde_k[i-24] = main_store[i];
+    // for(int i=28; i<32; i++)
+    //     Gxp[i-28] = main_store[i];
+    // for(int i=32; i<36; i++)
+    //     Gxn[i-32] = main_store[i];
+    // for(int i=36; i<40; i++)
+    //     Gyp[i-36] = main_store[i];
+    // for(int i=40; i<44; i++)
+    //     Gyn[i-40] = main_store[i];
+    // for(int i=44; i<48; i++)
+    //     sig_del_x_del_f[i-44] =main_store[i];
+    // for(int i=48; i<52; i++)
+    //     sig_del_y_del_f[i-48] = main_store[i];
 
-    cout<<"\nIteration Number: "<<iter+1<<endl;
+    double *phi_i, *phi_k, *G_i, *G_k, *result, *qtilde_i, *qtilde_k;
+    double *Gxp, *Gxn, *Gyp, *Gyn, *sig_del_x_del_f, *sig_del_y_del_f;
+
+    int i = 0;
+    phi_i = &(main_store[i]);
+    phi_k = &(main_store[i+4]);
+    G_i = &(main_store[i+8]);
+    G_k = &(main_store[i+12]);
+    result = &(main_store[i+16]);
+    qtilde_i = &(main_store[i+20]);
+    qtilde_k = &(main_store[i+24]);
+    Gxp = &(main_store[i+28]);
+    Gxn = &(main_store[i+32]);
+    Gyp = &(main_store[i+36]);
+    Gyn = &(main_store[i+40]);
+    sig_del_x_del_f = &(main_store[i+44]);
+    sig_del_y_del_f = &(main_store[i+48]);
+
+    //cout<<"Intial Check: "<<main_store[23]<<endl;
+
+
+
+    cout<<"\nIteration Number: (iter+1)  "<<iter+1<<endl;
 
     for(int rk=0; rk<4; rk++)
     {
         
-        cout<<"\n rk: "<<rk<<"\n";
+        cout<<"\n rk: (rk+1)  "<<rk+1<<"\n";
 
         q_variables(globaldata, numPoints, result);
 
@@ -225,12 +253,14 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         q_var_derivatives(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
 
-
+        debug_main_store_3(main_store);
 
         for(int inner_iters=0; inner_iters<3; inner_iters++)
         {
             q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
         }
+
+        //debug_main_store_3(main_store);
 
         cout<<"\nCalculating Flux Residual\n";
 
@@ -241,7 +271,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         cout<<"\nDone Calculating Flux Residual\n";
 
-        state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        //state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
     }
 }
 
@@ -257,8 +287,18 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
         double u2 = globaldata[idx].prim[2];
         double pr = globaldata[idx].prim[3];
         double beta = 0.5 * ((double)rho/pr);
+        if(beta!=beta)
+        {
+            cout<<"\nNAN encountered at Beta\n";
+            exit(0);
+        }
         double two_times_beta = 2.0 * beta;
         q_result[0] = log(rho) + log(beta) * 2.5 - (beta * ((u1 * u1) + (u2 * u2)));
+        if(q_result[0]!=q_result[0])
+        {
+            cout<<"\nNAN encountered at q_result[0]\n";
+            exit(0);
+        }
         q_result[1] = (two_times_beta * u1);
         q_result[2] = (two_times_beta * u2);
         q_result[3] = -two_times_beta;
@@ -266,6 +306,14 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
         {
             globaldata[idx].q[i] = q_result[i];
             //cout<<"q_result: "<<i<<" "<<q_result[i]<<endl;
+        }
+        for(int i=0; i<4; i++)
+        {
+            if(q_result[i]!=q_result[i])
+            {
+                cout<<"\nNAN encountered at q_result_"<<i<<"\n";
+                exit(0);
+            }
         }
     }
     cout<<"\nGoing outta q_variables\n";
@@ -291,13 +339,27 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
 
         for(int i=0; i<20; i++)
         {
+            cout<<"\n Count "<<i<<endl;
             int conn = globaldata[idx].conn[i];
-            if(conn == 0) break;
+            if(conn == 0) 
+            {
+                break;
+                cout<<"BROKENNNNNN Lesse i"<<i<<endl;
+                cout<<"Just to check if exiting";
+                exit(0);
+            }
+            if(conn!=conn)
+            {
+                    cout<<"\nNAN encountered at conn\n";
+                    exit(0);
+            }
             double x_k = globaldata[conn].x;
             double y_k = globaldata[conn].y;
 
             double delta_x = x_k - x_i;
             double delta_y = y_k - y_i;
+
+            //cout<<"Deltaaa x: "<<delta_x<<"Deltaa y:"<<delta_y<<endl;
 
             double dist = hypot(delta_x, delta_y);
             double weights = pow(dist, power);
@@ -305,28 +367,97 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
             sig_del_y_sqr += (delta_y * delta_y) * weights;
             sig_del_x_del_y += (delta_x * delta_y) * weights;
 
+            //cout<<"\nLesseee these values:\n"<<endl;
+            //cout<<sig_del_x_sqr<<"\t"<<sig_del_y_sqr<<"\t"<<sig_del_x_del_y<<endl;
+
+            if(sig_del_x_sqr!=sig_del_x_sqr)
+                {
+                    cout<<"\nNAN encountered at sig_del_x_sqr\n";
+                    exit(0);
+                }
+            if(sig_del_y_sqr!=sig_del_y_sqr)
+                {
+                    cout<<"\nNAN encountered at sig_del_y_sqr\n";
+                    exit(0);
+                }
+            if(sig_del_x_del_y!=sig_del_x_del_y)
+                {
+                    cout<<"\nNAN encountered at sig_del_x_del_y\n";
+                    exit(0);
+                }
             for(int iter=0; iter<4; iter++)
             {
                 double intermediate_var = weights * (globaldata[conn].q[iter] - globaldata[idx].q[iter]);
                 sig_del_x_del_q[iter] += delta_x * intermediate_var;
                 sig_del_y_del_q[iter] += delta_y * intermediate_var;
+                if(intermediate_var!=intermediate_var)
+                {
+                    cout<<"\nNAN encountered at intermediate_var\n";
+                    exit(0);
+                }
+
             }
 
-            for(int i=0; i<4; i++)
+            for(int j=0; j<4; j++)
             {
-                if (max_q[i] < globaldata[conn].q[i])
-                    max_q[i] = globaldata[conn].q[i];
-                if(min_q[i] > globaldata[conn].q[i])
-                    min_q[i] = globaldata[conn].q[i];
+                //cout<<"Yoo max: "<<max_q[j]<<endl;
+                if (max_q[j] < globaldata[conn].q[j])
+                {
+                    max_q[j] = globaldata[conn].q[j];
+                    //cout<<"\t"<<max_q[j]<<"\t";
+                    if(globaldata[conn].q[j]!=globaldata[conn].q[j])
+                    {
+                        cout<<"\nNan\n";
+                        exit(0);
+                    }
+                }
+                if(min_q[j] > globaldata[conn].q[j])
+                {
+                    min_q[j] = globaldata[conn].q[j];
+                    //cout<<"\t"<<min_q[j]<<"\t";
+                    if(globaldata[conn].q[j]!=globaldata[conn].q[j])
+                    {
+                        cout<<"\nNan\n";
+                        exit(0);
+                    }
+                }
             }
 
-            for(int i=0; i<4; i++)
+
+
+            for(int j=0; j<4; j++)
             {
-                globaldata[idx].max_q[i] = max_q[i];
-                globaldata[idx].min_q[i] = min_q[i];
+                globaldata[idx].max_q[j] = max_q[j];
+                cout<<"\n";
+                cout<<"\t"<<max_q[j]<<"\t";
+                //cout<<"\n And \n";
+                globaldata[idx].min_q[j] = min_q[j];
+                cout<<"\t"<<min_q[j]<<"\t";
+            }
+
+            for(int j=0; j<4; j++)
+            {    
+                if(max_q[j]!=max_q[j])
+                {
+                    cout<<"\nNAN encountered at max_q[j]\n";
+                    cout<<"\t"<<max_q[j];
+                    exit(0);
+                }
+
+                if(min_q[j]!=min_q[j])
+                {
+                    cout<<"\nNAN encountered at min_q[j]\n";
+                    exit(0);
+                }
             }
 
         }
+
+        //cout<<"Lesse what we're passing"<<"\n"<<endl;
+        //cout<<sig_del_x_sqr<<"\t"<<sig_del_y_sqr<<"\t"<<sig_del_x_del_y<<endl;
+
+        //cout<<"\nLesse what would happen to det"<<"\n"<<endl;
+        //cout<<sig_del_x_sqr*sig_del_y_sqr<<"\t"<<sig_del_x_del_y*sig_del_x_del_y<<endl;
 
         q_var_derivatives_update(sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, sig_del_x_del_q, sig_del_y_del_q, max_q, min_q);
 
@@ -345,12 +476,73 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
 inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2])
 {
     double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
+    cout<<"\nThis is sqr:"<<(sig_del_x_sqr * sig_del_y_sqr);
+    cout<<"\nSub from sqr: "<<(sig_del_x_del_y * sig_del_x_del_y);
+    cout<<"\nThis is det: "<<det<<endl;
     double one_by_det = 1.0/det;
+
+    if(one_by_det!=one_by_det || det!=det)
+    {
+        cout<<"\nNAN encountered at one_by_det or det\n";
+        exit(0);
+    }
+
+    for(int iter=0; iter<4; iter++)
+    {
+        if(sig_del_x_sqr != sig_del_x_sqr)
+        {
+            cout<<"sig_del_x_sqr_ Why god, why?"<<endl;
+            exit(0);
+        }
+
+        if(sig_del_y_sqr != sig_del_y_sqr)
+        {
+            cout<<"sig_del_y_sqr_ Why god, why?"<<endl;
+            exit(0);
+        }
+
+
+        if(sig_del_x_del_q[iter] != sig_del_x_del_q[iter])
+        {
+            cout<<"sig_del_x_q_ Why god, why?"<<endl;
+            exit(0);
+        }
+
+
+        if(sig_del_y_del_q[iter] != sig_del_y_del_q[iter])
+        {
+            cout<<"sig_del_y_q_ Why god, why?"<<endl;
+            exit(0);
+        }
+
+
+        if(sig_del_x_del_y != sig_del_x_del_y)
+        {
+            cout<<"sig_del_x_y_ Why god, why?"<<endl;
+            exit(0);
+        }
+
+
+    }
+
     for(int iter=0; iter<4; iter++)
     {
         dq1_store[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
         dq2_store[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
     }
+
+
+    for(int iter=0; iter<4; iter++)
+    {
+        if(dq1_store[iter] != dq1_store[iter])
+        {
+            cout<<"Why god, why? + "<<iter<<endl;
+            cout<<"One by det: "<<one_by_det<<endl;
+            exit(0);
+        }
+    }
+
+
 }
 
 void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4])
@@ -373,7 +565,7 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
 
         for(int i=0; i<20; i++)
         {
-            //cout<<i<<" ";
+            //cout<<i<<" "<<endl;
             int conn = globaldata[idx].conn[i];
             if(conn == 0) break;
             double x_k = globaldata[conn].x;
@@ -399,15 +591,15 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
                 tempdq[idx][1][iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
             }
 
-            for(int idx=0; idx<numPoints; idx++)
+            for(int k=0; k<numPoints; k++)
             {
-                q_var_derivatives_update_innerloop(qi_tilde, qk_tilde, idx, tempdq);
+                q_var_derivatives_update_innerloop(qi_tilde, qk_tilde, k, tempdq);
                 for(int i=0; i<4; i++)
                 {    
-                    globaldata[idx].dq1[i] = qi_tilde[i];
-                    globaldata[idx].dq2[i] = qk_tilde[i];
+                    globaldata[k].dq1[i] = qi_tilde[i];
+                    globaldata[k].dq2[i] = qk_tilde[i];
 
-                    cout<<"\n Q_Ders: "<<qi_tilde[i]<<"\t"<<qk_tilde[i];
+                    //cout<<"\n Q_Ders: "<<qi_tilde[i]<<"\t"<<qk_tilde[i];
                 }
             }
 
@@ -465,8 +657,17 @@ void debug_globaldata(Point* globaldata, int numPoints, int iter, int rk)
     for(int i=0; i<numPoints; i++)
     {
         fdebug<<"Point:  "<<i<<"\n";
-            for(int j=0; j<4; j++)
-                fdebug<<globaldata[i].q[j]<<"\t";
+            for(int j=0; j<20; j++)
+                fdebug<<globaldata[i].conn[j]<<"  ";
     }
+    fdebug.close();
+}
+
+void debug_main_store_3(double main_store[62])
+{
+    std::ofstream fdebug("debug_main_store_3.txt", std::ios_base::app);
+    fdebug<<"\n--------------------------------------------------------\n";
+    for(int i=0; i<62; i++)
+        fdebug<<"main_store "<<i<<": "<<main_store[i]<<"\n";
     fdebug.close();
 }
