@@ -14,6 +14,14 @@
 
 echo "Patience"
 cd src
+rm debug_output.txt
+rm debug_main_store.txt
+rm debug_main_store_2.txt
+rm debug_globaldata.txt
+touch debug_output.txt
+touch debug_main_store.txt
+touch debug_main_store_2.txt
+touch debug_globaldata.txt
 make clean
 make 
 ./clean_meshfree /opt/grids/quadtree/part/partGrid40K 2

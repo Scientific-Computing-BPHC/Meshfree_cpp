@@ -1,6 +1,8 @@
 #include "point.hpp"
 #include "flux_residual.hpp"
 #include "wall_fluxes.hpp"
+#include "outer_fluxes.hpp"
+#include "interior_fluxes.hpp"
 
 void cal_flux_residual(Point* globaldata, int numPoints, Config configData, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62])
 {
@@ -37,9 +39,28 @@ void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double 
 void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
 
+	outer_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
+	outer_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
+	outer_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
+
+	for(int i=0; i<4; i++)
+		Gxp[i] = (Gxp[i] + Gxn[i] + Gyn[i]);
+
+	for(int i=0; i<4; i++)
+		globaldata[idx].flux_res[i] = Gxp[i];
 }
 
 void interiorindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
+	interior_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
+	interior_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
+	interior_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
+	interior_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn); 
 
+
+	for(int i=0; i<4; i++)
+		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);
+
+	for(int i=0; i<4; i++)
+		globaldata[idx].flux_res[i] = Gxp[i];
 }

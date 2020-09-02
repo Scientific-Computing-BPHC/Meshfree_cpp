@@ -31,7 +31,7 @@ void func_delta(Point* globaldata, int numPoints, double cfl)
 	}
 }
 
-void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], double rk, double U[4], double Uold[4], double main_store[62])
+void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double U[4], double Uold[4], double main_store[62])
 {
 	double max_res = 0.0;
 	double sig_res_sqr[1];
@@ -83,7 +83,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 		residue = log(res_new/res_old[0]);
 
 	if(rk == 3)
-		cout<<std::fixed<<std::setprecision(17)<<\n"Residue: "<<iter+1<<" "<<residue<<endl;
+		cout<<std::fixed<<std::setprecision(17)<<"\nResidue: "<<iter+1<<" "<<residue<<endl;
 }
 
 void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], double rk)

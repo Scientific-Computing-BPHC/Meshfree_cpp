@@ -7,6 +7,7 @@ inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr,
 inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
 inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int idx, double tempdq[][2][4]);
 
+
 inline double deg2rad(double radians) {
     return radians * (180.0 / M_PI);
 }
@@ -215,9 +216,16 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
     for(int rk=0; rk<4; rk++)
     {
+        
+        cout<<"\n rk: "<<rk<<"\n";
+
         q_variables(globaldata, numPoints, result);
 
+        //debug_globaldata(globaldata, numPoints, iter, rk);
+
         q_var_derivatives(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
+
+
 
         for(int inner_iters=0; inner_iters<3; inner_iters++)
         {
@@ -228,6 +236,8 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
             result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
+
+        printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
         cout<<"\nDone Calculating Flux Residual\n";
 
@@ -246,14 +256,17 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
         double u1 = globaldata[idx].prim[1];
         double u2 = globaldata[idx].prim[2];
         double pr = globaldata[idx].prim[3];
-        double beta = 0.5 * (rho/pr);
+        double beta = 0.5 * ((double)rho/pr);
         double two_times_beta = 2.0 * beta;
         q_result[0] = log(rho) + log(beta) * 2.5 - (beta * ((u1 * u1) + (u2 * u2)));
         q_result[1] = (two_times_beta * u1);
         q_result[2] = (two_times_beta * u2);
         q_result[3] = -two_times_beta;
         for(int i=0; i<4; i++)
+        {
             globaldata[idx].q[i] = q_result[i];
+            //cout<<"q_result: "<<i<<" "<<q_result[i]<<endl;
+        }
     }
     cout<<"\nGoing outta q_variables\n";
 }
@@ -321,6 +334,8 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
         {
             globaldata[idx].dq1[i] = max_q[i];
             globaldata[idx].dq2[i] = min_q[i];
+
+            //cout<<"\n Q_Ders: "<<max_q[i]<<"\t"<<min_q[i];
         }
 
     }
@@ -391,6 +406,8 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
                 {    
                     globaldata[idx].dq1[i] = qi_tilde[i];
                     globaldata[idx].dq2[i] = qk_tilde[i];
+
+                    cout<<"\n Q_Ders: "<<qi_tilde[i]<<"\t"<<qk_tilde[i];
                 }
             }
 
@@ -419,4 +436,37 @@ inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int
         dq1[iter] = tempdq[idx][0][iter];
         dq2[iter] = tempdq[idx][1][iter];
     }
+}
+
+void printDebug(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62])
+{
+    std::ofstream fdebug("debug_output.txt", std::ios_base::app);
+
+    fdebug<<"\nChecking the Outputs: \n";
+    fdebug<<"numPoints:"<<numPoints<<"\n";
+
+    fdebug<<"Iteration: "<<iter+1<<"\n";
+    fdebug<<"Res_Old: "<<res_old[0]<<"\n";
+    fdebug<<"rk: "<<rk<<"\n";
+    for(int i=0; i<4; i++)
+        fdebug<<"sig_del_x_del_f "<<i<<": "<<sig_del_x_del_f[i]<<"\n";
+    for(int i=0; i<4; i++)
+        fdebug<<"sig_del_y_del_f "<<i<<": "<<sig_del_y_del_f[i]<<"\n";
+    for(int i=0; i<62; i++)
+        fdebug<<"main_store "<<i<<": "<<main_store[i]<<"\n";
+    fdebug.close();
+}
+
+
+void debug_globaldata(Point* globaldata, int numPoints, int iter, int rk)
+{
+    std::ofstream fdebug("debug_globaldata.txt", std::ios_base::app);
+    fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
+    for(int i=0; i<numPoints; i++)
+    {
+        fdebug<<"Point:  "<<i<<"\n";
+            for(int j=0; j<4; j++)
+                fdebug<<globaldata[i].q[j]<<"\t";
+    }
+    fdebug.close();
 }

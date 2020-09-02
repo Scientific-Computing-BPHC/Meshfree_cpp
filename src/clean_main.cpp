@@ -36,6 +36,7 @@ bool debug_mode = true;
 void meshfree_solver(char* file_name, int num_iters);
 void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4], int max_iters);
 void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters);
+void debug_main_store(double main_store[62]);
 
 int main(int argc, char **argv)
 {
@@ -144,6 +145,8 @@ void meshfree_solver(char* file_name, int max_iters)
 	cout<<"\n-----Start Read-----\n"; // readFile function in Julia
 
 	//cout<<result_doub[0][0]<<endl;
+
+
 
 	for(int idx=0; idx<numPoints; idx++)
 	{
@@ -254,6 +257,7 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 {
 	for (int i=0; i<max_iters; i++)
 	{
+		debug_main_store(main_store);
 		fpi_solver(i, globaldata, configData, res_old, numPoints, main_store, tempdq);
 	}
 }
@@ -268,4 +272,12 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	double tempdq[numPoints][2][4] = {0.0};
 
 	run_code(globaldata, configData, res_old, numPoints, main_store, tempdq, max_iters);
+}
+
+void debug_main_store(double main_store[62])
+{
+    std::ofstream fdebug("debug_main_store.txt", std::ios_base::app);
+    for(int i=0; i<62; i++)
+        fdebug<<"main_store "<<i<<": "<<main_store[i]<<"\n";
+    fdebug.close();
 }
