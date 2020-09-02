@@ -7,6 +7,14 @@ inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr,
 inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
 inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int idx, double tempdq[][2][4]);
 
+template <class Type>
+bool isNan(Type var)
+{
+    if(var!=var) return true;
+    return false;
+}
+
+
 
 inline double deg2rad(double radians) {
     return radians * (180.0 / M_PI);
@@ -271,7 +279,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         cout<<"\nDone Calculating Flux Residual\n";
 
-        //state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
     }
 }
 
@@ -287,6 +295,13 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
         double u2 = globaldata[idx].prim[2];
         double pr = globaldata[idx].prim[3];
         double beta = 0.5 * ((double)rho/pr);
+
+        if(isNan(rho) || isNan(u1) || isNan (u2) || isNan(pr))
+        {
+            cout<<"Ah we have a Nan inside q_variables here";
+            exit(0);
+        }
+
         if(beta!=beta)
         {
             cout<<"\nNAN encountered at Beta\n";
@@ -343,10 +358,10 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
             int conn = globaldata[idx].conn[i];
             if(conn == 0) 
             {
+                //cout<<"BROKENNNNNN Lesse i"<<i<<endl;
+                //cout<<"Just to check if exiting";
+                //exit(0);
                 break;
-                cout<<"BROKENNNNNN Lesse i"<<i<<endl;
-                cout<<"Just to check if exiting";
-                exit(0);
             }
             if(conn!=conn)
             {
@@ -476,9 +491,9 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
 inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2])
 {
     double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
-    cout<<"\nThis is sqr:"<<(sig_del_x_sqr * sig_del_y_sqr);
-    cout<<"\nSub from sqr: "<<(sig_del_x_del_y * sig_del_x_del_y);
-    cout<<"\nThis is det: "<<det<<endl;
+    // cout<<"\nThis is sqr:"<<(sig_del_x_sqr * sig_del_y_sqr);
+    // cout<<"\nSub from sqr: "<<(sig_del_x_del_y * sig_del_x_del_y);
+    // cout<<"\nThis is det: "<<det<<endl;
     double one_by_det = 1.0/det;
 
     if(one_by_det!=one_by_det || det!=det)
@@ -536,7 +551,14 @@ inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr,
     {
         if(dq1_store[iter] != dq1_store[iter])
         {
-            cout<<"Why god, why? + "<<iter<<endl;
+            cout<<"Why god, why dq1? + "<<iter<<endl;
+            cout<<"One by det: "<<one_by_det<<endl;
+            exit(0);
+        }
+
+        if(dq2_store[iter] != dq2_store[iter])
+        {
+            cout<<"Why god, why? dq2 + "<<iter<<endl;
             cout<<"One by det: "<<one_by_det<<endl;
             exit(0);
         }
@@ -580,26 +602,65 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
             sig_del_y_sqr += (delta_y * delta_y) * weights;
             sig_del_x_del_y += (delta_x * delta_y) * weights;
 
+
+            if(isNan(sig_del_x_sqr) || isNan(sig_del_y_sqr) || isNan(sig_del_x_del_y))
+            {
+                cout<<"Ah we have a Nan inside q_var_derivatives_innerloop here";
+                exit(0);
+            }    
+
+
             q_var_derivatives_get_sum_delq_innerloop(globaldata, idx, conn, weights, delta_x, delta_y, qi_tilde, qk_tilde, sig_del_x_del_q, sig_del_y_del_q);
 
             double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
             double one_by_det = 1.0/det;
 
+            if(isNan(det) || isNan(one_by_det))
+            {
+                cout<<"Ah we have a Nan inside q_var_derivatives_innerloop one by det or det here";
+                exit(0);
+            } 
+
             for(int iter =0; iter<4; iter++)
             {
+                
+                if(isNan(sig_del_x_del_q[iter]) || isNan(sig_del_y_del_q[iter]))
+                {
+                    cout<<"Ah we have a Nan inside q_var_derivatives_innerloop here sig_del";
+                    exit(0);
+                } 
+
                 tempdq[idx][0][iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
                 tempdq[idx][1][iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
+
+                if(isNan(tempdq[idx][0][iter]) || isNan(tempdq[idx][1][iter]))
+                {
+                    cout<<"Ah we have a Nan inside q_var_derivatives_innerloop tempdq here\n";
+                    if(isNan(sig_del_x_del_q[iter])) cout<<"\n because of sig x q";
+                    if(isNan(sig_del_y_del_q[iter])) cout<<"\n because of sig y q";
+                    if(isNan(sig_del_x_sqr)) cout<<"\n because of sig x sq";
+                    if(isNan(sig_del_y_sqr)) cout<<"\n because of sig y sq";
+                    if(isNan(one_by_det)) cout<<"\n because of one_by_det";
+                    if(isNan(one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y))) cout<<"Ah damn\n";
+                    cout <<"Hi"<<endl;
+                    exit(0);
+                } 
             }
 
             for(int k=0; k<numPoints; k++)
             {
                 q_var_derivatives_update_innerloop(qi_tilde, qk_tilde, k, tempdq);
-                for(int i=0; i<4; i++)
+                for(int j=0; j<4; j++)
                 {    
-                    globaldata[k].dq1[i] = qi_tilde[i];
-                    globaldata[k].dq2[i] = qk_tilde[i];
+                    globaldata[k].dq1[j] = qi_tilde[j];
+                    globaldata[k].dq2[j] = qk_tilde[j];
 
                     //cout<<"\n Q_Ders: "<<qi_tilde[i]<<"\t"<<qk_tilde[i];
+                    if(isNan(qi_tilde[j]) || isNan(qk_tilde[j]))
+                    {
+                        cout<<"Ah we have a Nan inside q_var_derivatives_innerloop here, at the end";
+                        exit(0);
+                    } 
                 }
             }
 
@@ -612,12 +673,29 @@ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx,
 {
     for(int iter=0; iter<4; iter++)
     {
+        if(isNan(qi_tilde[iter]) || isNan(qk_tilde[iter]))
+        {
+            cout<<"Ah we have a Nan inside q_var_derivatives_get_suminnerloop before only here";
+            exit(0);
+        } 
+
         qi_tilde[iter] = globaldata[idx].q[iter] - 0.5 * (delta_x * globaldata[idx].dq1[iter] + delta_y * globaldata[idx].dq2[iter]);
         qk_tilde[iter] = globaldata[conn].q[iter] - 0.5 * (delta_x * globaldata[conn].dq1[iter] + delta_y * globaldata[conn].dq2[iter]);
+
+        if(isNan(qi_tilde[iter]) || isNan(qk_tilde[iter]))
+        {
+            cout<<"Ah we have a Nan inside q_var_derivatives_get_suminnerloop here";
+            exit(0);
+        } 
 
         double intermediate_var = weights * (qk_tilde[iter] - qi_tilde[iter]);
         sig_del_x_del_q[iter] += delta_x * intermediate_var;
         sig_del_y_del_q[iter] += delta_y * intermediate_var;
+        if(isNan (sig_del_x_del_q[iter]) || isNan(sig_del_y_del_q[iter]))
+        {
+            cout<<"Ah we have a Nan inside q_var_derivatives_get_suminnerloop here at the end";
+            exit(0);
+        } 
     }
 }
 
@@ -627,6 +705,12 @@ inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int
     {
         dq1[iter] = tempdq[idx][0][iter];
         dq2[iter] = tempdq[idx][1][iter];
+
+        if(isNan(dq1[iter]) || isNan(dq2[iter]))
+        {
+            cout<<"Ah we have a Nan inside q_var_derivatives_update_innerloop dq";
+            exit(0);
+        } 
     }
 }
 
@@ -671,3 +755,5 @@ void debug_main_store_3(double main_store[62])
         fdebug<<"main_store "<<i<<": "<<main_store[i]<<"\n";
     fdebug.close();
 }
+
+

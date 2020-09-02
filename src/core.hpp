@@ -185,4 +185,7 @@ void printDebug(Point* globaldata, int numPoints, Config configData, int iter, d
 
 void debug_main_store_3(double main_store[62]);
 
+template <class Type>
+bool isNan(Type var);
+
 #endif
