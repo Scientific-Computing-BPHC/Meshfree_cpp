@@ -179,7 +179,7 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
 
 void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4]);
 
-void debug_globaldata(Point* globaldata, int numPoints, int iter, int rk);
+void debug_globaldata(Point* globaldata, int numPoints, int iter, int rk, double main_store[62]);
 
 void printDebug(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62]);
 

@@ -10,5 +10,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
 void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk);
 void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk);
 
+template <class Type>
+bool isNan(Type var);
 
 #endif

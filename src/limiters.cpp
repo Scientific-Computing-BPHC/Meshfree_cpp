@@ -63,15 +63,34 @@ conn_tuple connectivity_stats(double x_i, double y_i, double nx, double ny, doub
     
     double delta_x = x_k - x_i;
     double delta_y = y_k - y_i;
+
+    int deb = 0;
+    if(deb)
+    {
+    	cout<<"nx: "<<nx<<endl;
+    	cout<<"ny: "<<ny<<endl;
+    }
     
     double delta_s = delta_x*ny - delta_y*nx;
     double delta_n = delta_x*nx + delta_y*ny;
+
+    if(deb)
+    {
+    	cout<<"delta_s: "<<delta_s<<endl;
+    	cout<<"delta_n: "<<delta_n<<endl;
+    }
     
     double dist = sqrt(delta_s*delta_s + delta_n*delta_n);
     double weights = pow(dist, power);
     
     double delta_s_weights = delta_s*weights;
     double delta_n_weights = delta_n*weights;
+
+    if(deb)
+    {
+    	cout<<"delta_s_weights: "<<delta_s_weights<<endl;
+    	cout<<"delta_n_weights: "<<delta_n_weights<<endl;
+    }
     
     sig_del_x_sqr += delta_s*delta_s_weights;
     sig_del_y_sqr += delta_n*delta_n_weights;

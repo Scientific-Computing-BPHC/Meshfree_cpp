@@ -19,12 +19,34 @@ rm debug_main_store.txt
 rm debug_main_store_2.txt
 rm debug_main_store_3.txt
 rm debug_globaldata.txt
+rm debug_globaldata_conn.txt
+rm debug_globaldata__x.txt
+rm debug_globaldata__y.txt
+rm debug_normals.txt
+rm debug_globaldata_xpos.txt
+rm debug_globaldata_ypos.txt
+rm debug_globaldata_xneg.txt
+rm debug_globaldata_yneg.txt
+rm debug_globaldata_primal.txt
+rm debug_globaldata_flux_res.txt
+rm debug_globaldata_phi.txt
 touch debug_output.txt
 touch debug_main_store.txt
 touch debug_main_store_2.txt
 touch debug_main_store_3.txt
 touch debug_globaldata.txt
+touch debug_globaldata__x.txt
+touch debug_globaldata__y.txt
+touch debug_normals.txt
+touch debug_globaldata_conn.txt
+touch debug_globaldata_xpos.txt
+touch debug_globaldata_ypos.txt
+touch debug_globaldata_xneg.txt
+touch debug_globaldata_yneg.txt
+touch debug_globaldata_primal.txt
+touch debug_globaldata_flux_res.txt
+touch debug_globaldata_phi.txt
 make clean
 make 
-./clean_meshfree /opt/grids/quadtree/part/partGrid40K 1
+./clean_meshfree /opt/grids/quadtree/part/partGrid40K 4
 

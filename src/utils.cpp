@@ -43,3 +43,5 @@ void printPrimal(double primal[4])
 		cout<<std::fixed<<std::setprecision(20)<<primal[i]<<" ";
 	cout<<"\n";
 }
+
+

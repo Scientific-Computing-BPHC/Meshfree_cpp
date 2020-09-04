@@ -30,4 +30,6 @@ void checkFileRead(std::vector<vec_doub> result_doub, int numPoints);
 
 void printPrimal(double primal[4]);
 
+
+
 #endif

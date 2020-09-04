@@ -4,6 +4,13 @@
 #include "outer_fluxes.hpp"
 #include "interior_fluxes.hpp"
 
+template <class Type>
+bool isNan(Type var)
+{
+    if(var!=var) return true;
+    return false;
+}
+
 void cal_flux_residual(Point* globaldata, int numPoints, Config configData, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62])
 {
 	double power = main_store[52];
@@ -13,6 +20,14 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, doub
 
 	for(int idx=0; idx<numPoints; idx++)
 	{
+
+		if (idx == 668)
+		{
+			cout<<"\n PHI_K ISSS: \n";
+			for(int k=0; k<4; k++) cout<<phi_k[k] <<"  ";
+			cout<<"\n";	
+		}
+
 		if (globaldata[idx].flag_1 == 0)
 			wallindices_flux_residual(globaldata, gamma, idx, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const);
 		else if (globaldata[idx].flag_1 == 2)
@@ -25,29 +40,104 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, doub
 
 void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
+	
+	if (idx == 668)
+	{
+		cout<<"\n Inside outerr PHI_K ISSS: \n";
+		for(int k=0; k<4; k++) cout<<phi_k[k] <<"  ";
+		cout<<"\n";	
+	}
+
+	if(idx == 668)
+	{
+		cout<<"Lesse how other variables are doing"<<endl;
+		for(int l=0; l<4; l++)
+		{
+			cout<<"Gamma: "<<gamma<<"Phi:  "<<phi_i[l]<<" and k "<<phi_k[l]<<"  "<<G_i[l]<<"  "<<G_k[l]<<"  "<<qtilde_i[l]<<"  "<<qtilde_k[l]<<"  "<<endl;
+		}
+	}
+
 	wall_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
 	wall_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
 	wall_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn);
 
-	for(int i=0; i<4; i++)
-		Gxp[i] = (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
+	if(idx == 668)
+	{
+		cout<<"Lesse how G is"<<endl;
+		for(int l=0; l<4; l++)
+		{
+			cout<<Gxp[l]<<"  "<<Gxn[l]<<"  "<<Gyp[l]<<"  "<<endl;
+		}
+		//exit(0);
+	}
 
 	for(int i=0; i<4; i++)
+	{
+		Gxp[i] = (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
+		if(isNan(Gxp[i]))
+		{
+			cout<<"Nan in wall flux Gxp: "<<endl;
+			cout<<"Idx is: "<<idx<<endl;
+			cout<<"i is: "<<i<<endl;
+			cout<<"Gxp"<<Gxp[i]<<endl;
+			cout<<"Gxn"<<Gxn[i]<<endl;
+			cout<<"Gyn"<<Gyn[i]<<endl;
+			exit(0);
+		}
+	}
+
+	for(int i=0; i<4; i++)
+	{
 		globaldata[idx].flux_res[i] = Gxp[i];
+		if(isNan(globaldata[idx].flux_res[i]))
+		{
+			cout<<"Nan in wall flux: "<<endl;
+			cout<<"Idx is: "<<idx<<endl;
+			cout<<"i is: "<<i<<endl;
+			exit(0);
+		}
+	}
 }
 
 void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
 
+	if (idx == 1356)
+	{
+		cout<<"\n Inside outerr PHI_K ISSS: \n";
+		for(int k=0; k<4; k++) cout<<phi_k[k] <<"  ";
+		cout<<"\n";	
+	}
+
+	if(idx == 1356)
+	{
+		cout<<"Lesse how other variables are doing"<<endl;
+		for(int l=0; l<4; l++)
+		{
+			cout<<"Gamma: "<<gamma<<"Phi:  "<<phi_i[l]<<" and k "<<phi_k[l]<<"  "<<G_i[l]<<"  "<<G_k[l]<<"  "<<qtilde_i[l]<<"  "<<qtilde_k[l]<<"  "<<endl;
+		}
+	}
+
 	outer_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
 	outer_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
 	outer_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
 
+	if(idx == 1356)
+	{
+		cout<<"Lesse how G is"<<endl;
+		for(int l=0; l<4; l++)
+		{
+			cout<<Gxp[l]<<"  "<<Gxn[l]<<"  "<<Gyp[l]<<"  "<<endl;
+		}
+		//exit(0);
+	}
+
 	for(int i=0; i<4; i++)
-		Gxp[i] = (Gxp[i] + Gxn[i] + Gyn[i]);
+		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i]);
 
 	for(int i=0; i<4; i++)
 		globaldata[idx].flux_res[i] = Gxp[i];
+
 }
 
 void interiorindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
