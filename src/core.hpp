@@ -175,13 +175,15 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
 void q_variables(Point* globaldata, int numPoints, double q_result[4]);
 
-void q_var_derivatives(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4]);
+void q_var_derivatives(Point* globaldata, int numPoints, double power, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4]);
 
 void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4]);
 
 void debug_globaldata(Point* globaldata, int numPoints, int iter, int rk, double main_store[62]);
 
 void printDebug(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62]);
+
+void debug_Gs_and_qtildes(int iter, int rk, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62]);
 
 void debug_main_store_3(double main_store[62]);
 

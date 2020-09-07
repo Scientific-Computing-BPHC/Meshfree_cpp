@@ -44,13 +44,15 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 {
 	double max_res = 0.0;
 	double sig_res_sqr[1];
-	sig_res_sqr[0] = 1.0;
+	sig_res_sqr[0] = 0.0;
 
 	double Mach = main_store[57];
 	double gamma = main_store[58];
 	double pr_inf = main_store[59];
 	double rho_inf = main_store[60];
 	double theta = main_store[61];
+
+    print_state_update_params(globaldata, numPoints, iter, rk, res_old, U, Uold, main_store);
 
 	for(int idx =0; idx<numPoints; idx++)
 	{
@@ -106,6 +108,8 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
                 exit(0);
             }
 		}
+
+        track_sig_res_sqr(sig_res_sqr, iter, rk, idx);
 	}
 
 	double res_new = sqrt(sig_res_sqr[0])/numPoints;
@@ -381,4 +385,58 @@ inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double n
     temp2 = (rho*A2p*e + 0.5*rho*u2_rot*B2);
 
     Ubar[3] = (temp1 + temp2);
+}
+
+void track_sig_res_sqr(double sig_res_sqr[1], int iter, int rk, int idx)
+{
+    std::ofstream fdebug("debug_res_sqr.txt", std::ios_base::app);
+    fdebug<<"Iteration: "<<iter+1<<" And rk: (both + 1)  "<<rk+1<<" And Point:  "<<idx<<"  ";
+    fdebug<<std::setprecision(17)<<sig_res_sqr[0]<<"\n";
+        //fdebug<<globaldata[i].x<<", "
+    fdebug.close();
+}
+
+void print_state_update_params(Point* globaldata, int numPoints, int iter, int rk, double res_old[1], double U[4], double Uold[4], double main_store[62])
+{
+    std::ofstream fdebug("debug_state_update.txt", std::ios_base::app);
+    fdebug<<"Iteration: "<<iter+1<<" And rk: (both + 1)  "<<rk+1<<"\n";
+    fdebug<<std::setprecision(17)<<"Res Old:  "<<res_old[0]<<"\n";
+    fdebug<<"\nU: ";
+    for(int i=0; i<4; i++)
+        fdebug<<U[i]<<"  ";
+    fdebug<<"\nUold: ";
+    for(int i=0; i<4; i++)
+        fdebug<<Uold[i]<<"  ";
+    fdebug<<"\nMain store: ";
+    for(int i=0; i<62; i++)
+        fdebug<<main_store[i]<<"  ";
+    fdebug<<"\nFlux Res: ";
+    for(int i=0; i<numPoints; i++)
+    {
+        fdebug<<"\n";
+        for(int j=0; j<4; j++)
+            fdebug<<globaldata[i].flux_res[j]<<", ";
+    }
+    fdebug<<"\nPrim: ";
+    for(int i=0; i<numPoints; i++)
+    {
+        fdebug<<"\n";
+        for(int j=0; j<4; j++)
+            fdebug<<globaldata[i].prim[j]<<", ";
+    }
+    fdebug<<"\ndq1: ";
+    for(int i=0; i<numPoints; i++)
+    {
+        fdebug<<"\n";
+        for(int j=0; j<4; j++)
+            fdebug<<globaldata[i].dq1[j]<<", ";
+    }
+    fdebug<<"\ndq2: ";
+    for(int i=0; i<numPoints; i++)
+    {
+        fdebug<<"\n";
+        for(int j=0; j<4; j++)
+            fdebug<<globaldata[i].dq2[j]<<", ";
+    }
+    fdebug.close();
 }

@@ -267,7 +267,9 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         //debug_globaldata(globaldata, numPoints, iter, rk);
 
-        q_var_derivatives(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
+        q_var_derivatives(globaldata, numPoints, power, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
+
+        debug_Gs_and_qtildes(iter, rk, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
         debug_main_store_3(main_store);
 
@@ -280,7 +282,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         cout<<"\nCalculating Flux Residual\n";
 
-        debug_globaldata(globaldata, numPoints, iter, rk, main_store);
+        //debug_globaldata(globaldata, numPoints, iter, rk, main_store);
 
 
         // cout<<"\n \n \n";
@@ -291,17 +293,28 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         //     cout<<qtilde_i[m]<<"  "<<qtilde_k[m]<<"\n";
         // cout<<"\n \n \n";
 
+ 
 
         cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
             result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
-        printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+
+
+        //printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
         cout<<"\nDone Calculating Flux Residual\n";
 
-        debug_globaldata(globaldata, numPoints);
-
         state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+
+        debug_globaldata(globaldata, numPoints, iter, rk, main_store);
+        printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+
+        // if(iter == 0 && rk == 3)
+        // {
+        //     cout<<"\n Stopping inside fpi solver, 4th rk and 1st iteration done \n";
+        //     exit(0);
+
+        // }
 
     }
 }
@@ -317,7 +330,7 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
         double u1 = globaldata[idx].prim[1];
         double u2 = globaldata[idx].prim[2];
         double pr = globaldata[idx].prim[3];
-        double beta = 0.5 * ((double)rho/pr);
+        double beta = 0.5 * (rho/pr);
 
         if(isNan(rho) || isNan(u1) || isNan (u2) || isNan(pr))
         {
@@ -363,7 +376,7 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
     cout<<"\nGoing outta q_variables\n";
 }
 
-void q_var_derivatives(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4])
+void q_var_derivatives(Point* globaldata, int numPoints, double power, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4])
 {
     cout<<"\nInside q_var_derivatives\n";
 
@@ -379,6 +392,12 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
         {
             sig_del_x_del_q[i] = 0.0;
             sig_del_y_del_q[i] = 0.0;
+        }
+
+        for(int i=0; i<4; i++)
+        {
+            max_q[i] = globaldata[idx].q[i];
+            min_q[i] = globaldata[idx].q[i];
         }
 
         for(int i=0; i<20; i++)
@@ -469,36 +488,37 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double te
                     }
                 }
             }
-
-
-
-            for(int j=0; j<4; j++)
-            {
-                globaldata[idx].max_q[j] = max_q[j];
-                //cout<<"\n";
-                //cout<<"\t"<<max_q[j]<<"\t";
-                //cout<<"\n And \n";
-                globaldata[idx].min_q[j] = min_q[j];
-                //cout<<"\t"<<min_q[j]<<"\t";
-            }
-
-            for(int j=0; j<4; j++)
-            {    
-                if(max_q[j]!=max_q[j])
-                {
-                    cout<<"\nNAN encountered at max_q[j]\n";
-                    cout<<"\t"<<max_q[j];
-                    exit(0);
-                }
-
-                if(min_q[j]!=min_q[j])
-                {
-                    cout<<"\nNAN encountered at min_q[j]\n";
-                    exit(0);
-                }
-            }
-
         }
+
+
+
+        for(int i=0; i<4; i++)
+        {
+            globaldata[idx].max_q[i] = max_q[i];
+            //cout<<"\n";
+            //cout<<"\t"<<max_q[j]<<"\t";
+            //cout<<"\n And \n";
+            globaldata[idx].min_q[i] = min_q[i];
+            //cout<<"\t"<<min_q[j]<<"\t";
+        }
+
+        for(int i=0; i<4; i++)
+        {    
+            if(max_q[i]!=max_q[i])
+            {
+                cout<<"\nNAN encountered at max_q[i]\n";
+                cout<<"\t"<<max_q[i];
+                exit(0);
+            }
+
+            if(min_q[i]!=min_q[i])
+            {
+                cout<<"\nNAN encountered at min_q[i]\n";
+                exit(0);
+            }
+        }
+
+        
 
         //cout<<"Lesse what we're passing"<<"\n"<<endl;
         //cout<<sig_del_x_sqr<<"\t"<<sig_del_y_sqr<<"\t"<<sig_del_x_del_y<<endl;
@@ -780,7 +800,7 @@ void printDebug(Point* globaldata, int numPoints, Config configData, int iter, d
 
     fdebug<<"Iteration: "<<iter+1<<"\n";
     fdebug<<"Res_Old: "<<res_old[0]<<"\n";
-    fdebug<<"rk: "<<rk<<"\n";
+    fdebug<<"rk (rk+1): "<<rk+1<<"\n";
     for(int i=0; i<4; i++)
         fdebug<<"sig_del_x_del_f "<<i<<": "<<sig_del_x_del_f[i]<<"\n";
     for(int i=0; i<4; i++)
@@ -793,13 +813,13 @@ void printDebug(Point* globaldata, int numPoints, Config configData, int iter, d
 
 void debug_globaldata(Point* globaldata, int numPoints, int iter, int rk, double main_store[62])
 {
-    std::ofstream fdebug("debug_globaldata_phi.txt", std::ios_base::app);
+    std::ofstream fdebug("debug_globaldata_dq.txt", std::ios_base::app);
     fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
     for(int i=0; i<numPoints; i++)
     {
         fdebug<<"\nPoint:  "<<i<<"  ";
             for(int j=0; j<4; j++)
-                fdebug<<main_store[j]<<" and "<<main_store[4+j]<<" ,  ";
+                fdebug<<std::setprecision(17)<<globaldata[i].dq1[j]<<" and "<<globaldata[i].dq2[j]<<" ,  ";
         //fdebug<<globaldata[i].x<<", ";
     }
     fdebug.close();
@@ -811,6 +831,58 @@ void debug_main_store_3(double main_store[62])
     fdebug<<"\n--------------------------------------------------------\n";
     for(int i=0; i<62; i++)
         fdebug<<"main_store "<<i<<": "<<main_store[i]<<"\n";
+    fdebug.close();
+}
+
+void debug_Gs_and_qtildes(int iter, int rk, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62])
+{
+    std::ofstream fdebug("debug_Gs.txt", std::ios_base::app);
+
+    fdebug<<"\nChecking the Outputs: \n";
+
+    fdebug<<"Iteration: "<<iter+1<<"\n";
+    fdebug<<"rk (rk+1): "<<rk+1<<"\n";
+    fdebug<<"\nGxp: ";
+    for(int i=0; i<4; i++)
+        fdebug<<Gxp[i]<<"  ";
+    fdebug<<"\nGxn: ";
+    for(int i=0; i<4; i++)
+        fdebug<<Gxn[i]<<"  ";
+    fdebug<<"\nGyp: ";
+    for(int i=0; i<4; i++)
+        fdebug<<Gyp[i]<<"  ";
+    fdebug<<"\nGyn: ";
+    for(int i=0; i<4; i++)
+        fdebug<<Gyn[i]<<"  ";
+    fdebug<<"\nPhi_i: ";
+    for(int i=0; i<4; i++)
+        fdebug<<phi_i[i]<<"  ";
+    fdebug<<"\nPhi_k: ";
+    for(int i=0; i<4; i++)
+        fdebug<<phi_k[i]<<"  ";
+    fdebug<<"\nG_i: ";
+    for(int i=0; i<4; i++)
+        fdebug<<G_i[i]<<"  ";
+    fdebug<<"\nG_k: ";
+    for(int i=0; i<4; i++)
+        fdebug<<G_k[i]<<"  ";
+    fdebug<<"\nResult: ";
+    for(int i=0; i<4; i++)
+        fdebug<<result[i]<<"  ";
+    fdebug<<"\nqtilde_i: ";
+    for(int i=0; i<4; i++)
+        fdebug<<qtilde_i[i]<<"  ";
+    fdebug<<"\nqtilde_k: ";
+    for(int i=0; i<4; i++)
+        fdebug<<qtilde_k[i]<<"  ";
+    fdebug<<"\nsig_del_x_del_f: ";
+    for(int i=0; i<4; i++)
+        fdebug<<sig_del_x_del_f[i]<<"  ";
+    fdebug<<"\nsig_del_y_del_f: ";
+    for(int i=0; i<4; i++)
+        fdebug<<sig_del_y_del_f[i]<<"  ";
+    for(int i=0; i<62; i++)
+        fdebug<<"\nmain_store "<<i<<": "<<main_store[i]<<"\n";
     fdebug.close();
 }
 

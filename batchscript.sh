@@ -30,6 +30,10 @@ rm debug_globaldata_yneg.txt
 rm debug_globaldata_primal.txt
 rm debug_globaldata_flux_res.txt
 rm debug_globaldata_phi.txt
+rm debug_globaldata_dq.txt
+rm debug_Gs.txt
+rm debug_res_sqr.txt
+rm debug_state_update.txt
 touch debug_output.txt
 touch debug_main_store.txt
 touch debug_main_store_2.txt
@@ -46,6 +50,10 @@ touch debug_globaldata_yneg.txt
 touch debug_globaldata_primal.txt
 touch debug_globaldata_flux_res.txt
 touch debug_globaldata_phi.txt
+touch debug_globaldata_dq.txt
+touch debug_Gs.txt
+touch debug_res_sqr.txt
+touch debug_state_update.txt
 make clean
 make 
 ./clean_meshfree /opt/grids/quadtree/part/partGrid40K 4

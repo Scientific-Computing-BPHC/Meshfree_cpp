@@ -9,6 +9,8 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk);
 void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk);
 void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk);
+void track_sig_res_sqr(double sig_res_sqr[1], int iter, int rk, int idx);
+void print_state_update_params(Point* globaldata, int numPoints, int iter, int rk, double res_old[1], double U[4], double Uold[4], double main_store[62]);
 
 template <class Type>
 bool isNan(Type var);
