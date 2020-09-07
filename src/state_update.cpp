@@ -131,7 +131,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 	else
 		residue = log(res_new/res_old[0]);
 
-    cout<<"\nResidue is: "<<std::setprecision(17)<<residue<<" at rk: (rk+1) "<<rk+1<<endl;
+    // cout<<"\nResidue is: "<<std::setprecision(17)<<residue<<" at rk: (rk+1) "<<rk+1<<endl;
 
 	if(rk == 3)
 		cout<<std::fixed<<std::setprecision(17)<<"\nResidue: "<<iter+1<<" "<<residue<<endl;

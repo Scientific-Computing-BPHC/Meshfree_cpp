@@ -106,6 +106,15 @@ void calculate_qtile(double qtilde_i[4], double qtilde_k[4], Point* globaldata, 
 	update_qtildes(qtilde_i, globaldata[idx].q, globaldata[idx].dq1, globaldata[idx].dq2, delta_x, delta_y);
 	update_qtildes(qtilde_k, globaldata[conn].q, globaldata[conn].dq1, globaldata[conn].dq2, delta_x, delta_y);
 
+	// if(idx == 0)
+	// {
+	// 	   	cout<<"\n INSIDE Calculate q tildes for conn (+1): "<<conn+1<<endl;
+ //            for(int h=0; h<4; h++)
+ //            {
+ //                cout<<qtilde_i[h]<<","<<qtilde_k[h]<<"    ";
+ //            }
+	// }
+
 	for(int j=0; j<4; j++)
 	{
 		if(isNan(globaldata[idx].q[j]))
@@ -132,14 +141,36 @@ void calculate_qtile(double qtilde_i[4], double qtilde_k[4], Point* globaldata, 
 		}
 	}
 
+	// if(idx == 0)
+	// {
+	// 	   	cout<<"\n INSIDE PHI for conn (+1): "<<conn+1<<endl;
+ //            for(int h=0; h<4; h++)
+ //            {
+ //                cout<<phi_i[h]<<","<<phi_k[h]<<"    ";
+ //            }
+	// }
+
+
+
 	if(limiter_flag == 1)
 	{
 		venkat_limiter(qtilde_i, vl_const, globaldata, idx, gamma, phi_i);
-		venkat_limiter(qtilde_k, vl_const, globaldata, idx, gamma, phi_k);
+		venkat_limiter(qtilde_k, vl_const, globaldata, conn, gamma, phi_k);
 		update_qtildes(qtilde_i, globaldata[idx].q, globaldata[idx].dq1, globaldata[idx].dq2, delta_x, delta_y, phi_i);
 		update_qtildes(qtilde_k, globaldata[conn].q, globaldata[conn].dq1, globaldata[conn].dq2, delta_x, delta_y, phi_k);
 	}
+
+	// if(idx == 0)
+	// {
+	// 	   	cout<<"\n PHI AT THE END for conn (+1): "<<conn+1<<endl;
+ //            for(int h=0; h<4; h++)
+ //            {
+ //                cout<<phi_i[h]<<","<<phi_k[h]<<"    ";
+ //            }
+	// }
 }
+
+
 
 inline void update_qtildes(double qtilde[4], double q[4], double dq1[4], double dq2[4], double delta_x, double delta_y)
 {
@@ -190,3 +221,8 @@ void qtilde_to_primitive(double result[4], double qtilde[4], double gamma)
     result[2] = rho;
     result[3] = pr;
 }
+
+// void temp_debug(int idx, double phi_i[4], double phi_k[4], double qtilde_i[4], double qtilde_k[4])
+// {
+
+// }

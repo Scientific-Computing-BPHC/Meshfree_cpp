@@ -269,8 +269,6 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         q_var_derivatives(globaldata, numPoints, power, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
 
-        debug_Gs_and_qtildes(iter, rk, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
-
         debug_main_store_3(main_store);
 
         for(int inner_iters=0; inner_iters<3; inner_iters++)
@@ -293,10 +291,16 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         //     cout<<qtilde_i[m]<<"  "<<qtilde_k[m]<<"\n";
         // cout<<"\n \n \n";
 
- 
+        debug_Gs_and_qtildes(iter, rk, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
         cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
             result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
+
+        // if(rk==1)
+        // {
+        //     cout<<"Exiting for rk==1, inside core";
+        //     exit(0);
+        // }
 
 
 

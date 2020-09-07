@@ -244,8 +244,8 @@ void meshfree_solver(char* file_name, int max_iters)
 		globaldata[idx].right = (int)result_doub[idx][3];
 		globaldata[idx].flag_1 = (int)result_doub[idx][4];
 		globaldata[idx].flag_2 = (int)result_doub[idx][5];
-		globaldata[idx].short_distance = result_doub[idx][10];
-		globaldata[idx].nbhs = (int)result_doub[idx][11];
+		globaldata[idx].short_distance = result_doub[idx][9];
+		globaldata[idx].nbhs = (int)result_doub[idx][10];
 
 		for(int i=0; i<20; i++)
 		{

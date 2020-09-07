@@ -31,6 +31,8 @@ void wall_dGx_pos(Point* globaldata, int idx, double gamma, double phi_i[4], dou
 	double tx = ny;
 	double ty = -nx;
 
+    // if(idx == 0) cout<<"\nWOkay: "<<std::setprecision(17)<<x_i<<"  "<<y_i<<"  "<<nx<<"  "<<ny<<endl;
+
 	for(int i=0; i<20; i++)
 	{
 		int conn = globaldata[idx].xpos_conn[i];
@@ -38,12 +40,21 @@ void wall_dGx_pos(Point* globaldata, int idx, double gamma, double phi_i[4], dou
 
 		conn = conn - 1;
 
-		if(idx==804) cout<<"WITH EACH I: "<<i<<" Conn is: "<<conn<<" gloabl conn: "<<globaldata[conn].x<<"\t"<<globaldata[conn].y<<endl;
+		//if(idx==804) cout<<"WITH EACH I: "<<i<<" Conn is: "<<conn<<" gloabl conn: "<<globaldata[conn].x<<"\t"<<globaldata[conn].y<<endl;
 
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
 		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
 
 		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+
+        // if (idx == 0)
+        // {
+        //     cout<<"\n Calculate q tildes for conn (+1): "<<conn+1<<endl;
+        //     for(int h=0; h<4; h++)
+        //     {
+        //         cout<<qtilde_i[h]<<","<<qtilde_k[h]<<"    ";
+        //     }
+        // }
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
@@ -73,6 +84,15 @@ void wall_dGx_pos(Point* globaldata, int idx, double gamma, double phi_i[4], dou
     	}
 
     }
+
+    // if(idx==0)
+    // {
+    //     cout<<"\nSig values are, dGxpos: "<<endl;
+    //     for(int iter=0; iter<4; iter++)
+    //     {
+    //         cout<<sig_del_x_del_f[iter]<<"  "<<sig_del_y_del_f[iter]<<endl;
+    //     }
+    // }
 
 	
 }
