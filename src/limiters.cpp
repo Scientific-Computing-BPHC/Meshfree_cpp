@@ -92,9 +92,9 @@ conn_tuple connectivity_stats(double x_i, double y_i, double nx, double ny, doub
     	cout<<"delta_n_weights: "<<delta_n_weights<<endl;
     }
     
-    sig_del_x_sqr += delta_s*delta_s_weights;
-    sig_del_y_sqr += delta_n*delta_n_weights;
-    sig_del_x_del_y += delta_s*delta_n_weights;
+    sig_del_x_sqr += (delta_s*delta_s_weights);
+    sig_del_y_sqr += (delta_n*delta_n_weights);
+    sig_del_x_del_y += (delta_s*delta_n_weights);
 
     conn_tuple return_result = std::make_tuple(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
 
@@ -200,8 +200,8 @@ void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4], double G_
 	for(int iter=0; iter<4; iter++)
 	{
 		double intermediate_var = G_k[iter] - G_i[iter];
-		sig_del_x_del_f[iter] += intermediate_var * delta_s_weights;
-		sig_del_y_del_f[iter] += intermediate_var * delta_n_weights;
+		sig_del_x_del_f[iter] += (intermediate_var * delta_s_weights);
+		sig_del_y_del_f[iter] += (intermediate_var * delta_n_weights);
 	}
 }
 

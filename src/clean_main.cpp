@@ -356,7 +356,7 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 {
 	for (int i=0; i<max_iters; i++)
 	{
-		debug_main_store(main_store);
+		//debug_main_store(main_store);
 		fpi_solver(i, globaldata, configData, res_old, numPoints, main_store, tempdq);
 	}
 }

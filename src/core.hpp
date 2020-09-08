@@ -108,14 +108,14 @@ struct Config
 
 	void setConfig()
 	{
-		core.points = 9600;
-		core.cfl = 0.5;
+		core.points = 48738;
+		core.cfl = 0.2;
 		core.max_iters = 10;
-		core.mach = 1.2;
-		core.aoa = 0.0;
+		core.mach = 0.63;
+		core.aoa = 2;
 		core.power = 0.0;
 		core.limiter_flag = 1;
-		core.vl_const = 200.0;
+		core.vl_const = 50;
 		core.initial_conditions_flag = 0;
 		core.interior_points_normal_flag = 0;
 		core.shapes = 1.0;

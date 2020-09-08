@@ -254,8 +254,6 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
     //cout<<"Intial Check: "<<main_store[23]<<endl;
 
-
-
     cout<<"\nIteration Number: (iter+1)  "<<iter+1<<endl;
 
     for(int rk=0; rk<4; rk++)
@@ -263,13 +261,36 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         
         cout<<"\n rk: (rk+1)  "<<rk+1<<"\n";
 
+        int deb = 1;
+        if(deb)
+        {
+            int idx = 0;
+            {
+                for(int i=0; i<4; i++)
+                {
+                    cout<<"Prim: "<<i<<" "<<globaldata[idx].prim[i]<<endl;
+                }
+            }
+        }
+
         q_variables(globaldata, numPoints, result);
+
+        if(deb)
+        {
+            int idx = 0;
+            {
+                for(int i=0; i<4; i++)
+                {
+                    cout<<"Result: "<<i<<" "<<result[i]<<", dq1: "<<i<<" "<<globaldata[idx].dq1[i]<<", dq2: "<<i<<" "<<globaldata[idx].dq2[i]<<endl;
+                }
+            }
+        }
 
         //debug_globaldata(globaldata, numPoints, iter, rk);
 
         q_var_derivatives(globaldata, numPoints, power, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
 
-        debug_main_store_3(main_store);
+        //debug_main_store_3(main_store);
 
         for(int inner_iters=0; inner_iters<3; inner_iters++)
         {
@@ -291,7 +312,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         //     cout<<qtilde_i[m]<<"  "<<qtilde_k[m]<<"\n";
         // cout<<"\n \n \n";
 
-        debug_Gs_and_qtildes(iter, rk, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        //debug_Gs_and_qtildes(iter, rk, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
         cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
             result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
@@ -310,8 +331,8 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
-        debug_globaldata(globaldata, numPoints, iter, rk, main_store);
-        printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        //debug_globaldata(globaldata, numPoints, iter, rk, main_store);
+        //printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
         // if(iter == 0 && rk == 3)
         // {
@@ -408,6 +429,7 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
         {
             //cout<<"\n Count "<<i<<endl;
             int conn = globaldata[idx].conn[i];
+            if(idx == 48737) cout<<"Conn: "<<conn<<endl;
             if(conn == 0) 
             {
                 //cout<<"BROKENNNNNN Lesse i"<<i<<endl;
@@ -433,9 +455,9 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
 
             double dist = hypot(delta_x, delta_y);
             double weights = pow(dist, power);
-            sig_del_x_sqr += (delta_x * delta_x) * weights;
-            sig_del_y_sqr += (delta_y * delta_y) * weights;
-            sig_del_x_del_y += (delta_x * delta_y) * weights;
+            sig_del_x_sqr += ((delta_x * delta_x) * weights);
+            sig_del_y_sqr += ((delta_y * delta_y) * weights);
+            sig_del_x_del_y += ((delta_x * delta_y) * weights);
 
             //cout<<"\nLesseee these values:\n"<<endl;
             //cout<<sig_del_x_sqr<<"\t"<<sig_del_y_sqr<<"\t"<<sig_del_x_del_y<<endl;
@@ -458,8 +480,8 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
             for(int iter=0; iter<4; iter++)
             {
                 double intermediate_var = weights * (globaldata[conn].q[iter] - globaldata[idx].q[iter]);
-                sig_del_x_del_q[iter] += delta_x * intermediate_var;
-                sig_del_y_del_q[iter] += delta_y * intermediate_var;
+                sig_del_x_del_q[iter] += (delta_x * intermediate_var);
+                sig_del_y_del_q[iter] += (delta_y * intermediate_var);
                 if(intermediate_var!=intermediate_var)
                 {
                     cout<<"\nNAN encountered at intermediate_var\n";
@@ -530,8 +552,11 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
         //cout<<"\nLesse what would happen to det"<<"\n"<<endl;
         //cout<<sig_del_x_sqr*sig_del_y_sqr<<"\t"<<sig_del_x_del_y*sig_del_x_del_y<<endl;
 
+        if(idx==48737) cout<<"Before update min_q[0]: "<<min_q[0]<<endl;
+
         q_var_derivatives_update(sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, sig_del_x_del_q, sig_del_y_del_q, max_q, min_q);
 
+        if(idx==48737) cout<<"After update min_q[0]: "<<min_q[0]<<endl;
         for(int i=0; i<4; i++)
         {
             globaldata[idx].dq1[i] = max_q[i];
@@ -652,14 +677,16 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
             double x_k = globaldata[conn].x;
             double y_k = globaldata[conn].y;
 
+            if(idx==48737) cout<<"conn (+1): "<<conn+1<<" y_k: "<<y_k<<endl;
+
             double delta_x = x_k - x_i;
             double delta_y = y_k - y_i;
 
             double dist = hypot(delta_x, delta_y);
             double weights = pow(dist, power);
-            sig_del_x_sqr += (delta_x * delta_x) * weights;
-            sig_del_y_sqr += (delta_y * delta_y) * weights;
-            sig_del_x_del_y += (delta_x * delta_y) * weights;
+            sig_del_x_sqr += ((delta_x * delta_x) * weights);
+            sig_del_y_sqr += ((delta_y * delta_y) * weights);
+            sig_del_x_del_y += ((delta_x * delta_y) * weights);
 
 
             if(isNan(sig_del_x_sqr) || isNan(sig_del_y_sqr) || isNan(sig_del_x_del_y))
@@ -679,6 +706,7 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
                 if(!tmp) cout<<"Nbh is "<<i<<" "<<" Point is "<<idx<<" Check karo "<<endl;
             }
 
+            if(idx==48737) cout<<"\n Sig dely delq BEFOREEEE[0]: "<<sig_del_y_del_q[0]<<endl;
 
             q_var_derivatives_get_sum_delq_innerloop(globaldata, idx, conn, weights, delta_x, delta_y, qi_tilde, qk_tilde, sig_del_x_del_q, sig_del_y_del_q);
         }
@@ -690,6 +718,15 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
             cout<<"sig_del_y_sqr_: "<<sig_del_y_sqr<<endl;
             cout<<"sig_del_x_y_: "<<sig_del_x_del_y<<endl;
             cout<<"My man_2: "<<(sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
+        }
+
+        if(idx == 48737)
+        {
+            cout<<"\n Sig x sqr: "<<sig_del_x_sqr<<endl;
+            cout<<"\n Sig y sqr: "<<sig_del_y_sqr<<endl;
+            cout<<"\n Sig delx dely: "<<sig_del_x_del_y<<endl;
+            cout<<"\n Sig delx delq[0]: "<<sig_del_x_del_q[0]<<endl;
+            cout<<"\n Sig dely delq[0]: "<<sig_del_y_del_q[0]<<endl;
         }
 
         double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
@@ -730,6 +767,9 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
         }
     }
 
+    cout<<"\nTempdq[1][0] for idx 48737: "<<tempdq[48737][1][0];
+
+
     for(int k=0; k<numPoints; k++)
     {
         q_var_derivatives_update_innerloop(qi_tilde, qk_tilde, k, tempdq);
@@ -744,6 +784,12 @@ void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power,
                 cout<<"Ah we have a Nan inside q_var_derivatives_innerloop here, at the end";
                 exit(0);
             } 
+        }
+
+        if(k == 48737)
+        {
+            cout<<"\n DEBUG: qtilde_i[0]: "<<qi_tilde[0]<<endl;
+            cout<<"\n DEBUG: qtilde_k[0]: "<<qk_tilde[0]<<endl;
         }
     }
 
@@ -767,11 +813,24 @@ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx,
         {
             cout<<"Ah we have a Nan inside q_var_derivatives_get_suminnerloop here";
             exit(0);
+        }
+
+        if(idx == 48737)
+        {   
+            cout<<"\n Conn: (+1) "<<conn+1<<endl;
+            cout<<"Weights: "<<weights<<endl;
+            cout<<"Delta_y: "<<delta_y<<endl;
+            cout<<"q_i[0]: "<<qi_tilde[0]<<endl;
+            cout<<"q_k[0]: "<<qk_tilde[0]<<endl;
         } 
 
         double intermediate_var = weights * (qk_tilde[iter] - qi_tilde[iter]);
-        sig_del_x_del_q[iter] += delta_x * intermediate_var;
-        sig_del_y_del_q[iter] += delta_y * intermediate_var;
+        sig_del_x_del_q[iter] += (delta_x * intermediate_var);
+        sig_del_y_del_q[iter] += (delta_y * intermediate_var);
+        if(idx == 48737 && iter == 0)
+        {
+            cout<<"Check intermediate sig y q [0]: "<<sig_del_y_del_q[0]<<endl;
+        }
         if(isNan (sig_del_x_del_q[iter]) || isNan(sig_del_y_del_q[iter]))
         {
             cout<<"Ah we have a Nan inside q_var_derivatives_get_suminnerloop here at the end";
@@ -793,6 +852,7 @@ inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int
             exit(0);
         } 
     }
+
 }
 
 void printDebug(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62])

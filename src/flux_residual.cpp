@@ -56,10 +56,23 @@ void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double 
 	// 		cout<<"Gamma: "<<gamma<<"Phi:  "<<phi_i[l]<<" and k "<<phi_k[l]<<" G_i:  "<<G_i[l]<<" G_k: "<<G_k[l]<<" result:  "<<result[l]<<" qtilde_i: "<<qtilde_i[l]<<" qtilde_k:  "<<qtilde_k[l]<<" sigx: "<<sig_del_x_del_f[l]<<" sigy: "<<sig_del_y_del_f[l]<<"  "<<power<<"  "<<limiter_flag<<"  "<<vl_const<<endl;
 	// 	}
 	// }
+	if(idx==0)
+	{
+		cout<<"G_i[0]: HERE "<<G_i[0]<<endl;
+		cout<<"G_k[0]: HERE "<<G_k[0]<<endl;
+		cout<<"qtilde_i[0]: HERE "<<qtilde_i[0]<<endl;
+		cout<<"qtilde_k[0]: HERE "<<qtilde_k[0]<<endl;
+	}
 
 	wall_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
+	if(idx==0)
+		cout<<"Gxp[0]: HERE "<<Gxp[0]<<endl;
 	wall_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
+	if(idx==0)
+		cout<<"Gxn[0]: HERE "<<Gxn[0]<<endl;
 	wall_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn);
+	if(idx==0)
+		cout<<"Gyn[0]: HERE "<<Gyn[0]<<endl;
 
 	// if(idx == 0)
 	// {
@@ -80,7 +93,7 @@ void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double 
 	// 	//exit(0);
 	// }
 
-	debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
+	//debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
 
 	for(int i=0; i<4; i++)
 	{
@@ -143,7 +156,7 @@ void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double
 	// 	//exit(0);
 	// }
 
-	debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
+	//debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
 
 	for(int i=0; i<4; i++)
 		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i]);
@@ -160,7 +173,7 @@ void interiorindices_flux_residual(Point* globaldata, double gamma, int idx, dou
 	interior_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
 	interior_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn); 
 
-	debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
+	//debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
 
 
 	for(int i=0; i<4; i++)
