@@ -200,6 +200,9 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     double power = main_store[52];
     double cfl = main_store[53];
 
+    int rks = configData.core.rks;
+    int euler = configData.core.euler;
+
     func_delta(globaldata, numPoints, cfl);
 
     //debug_globaldata(globaldata, numPoints, iter, 0);
@@ -256,7 +259,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
     cout<<"\nIteration Number: (iter+1)  "<<iter+1<<endl;
 
-    for(int rk=0; rk<4; rk++)
+    for(int rk=0; rk<rks; rk++)
     {
         
         cout<<"\n rk: (rk+1)  "<<rk+1<<"\n";
@@ -329,7 +332,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         cout<<"\nDone Calculating Flux Residual\n";
 
-        state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store, euler);
 
         //debug_globaldata(globaldata, numPoints, iter, rk, main_store);
         //printDebug(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store);

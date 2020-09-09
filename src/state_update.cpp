@@ -40,7 +40,7 @@ void func_delta(Point* globaldata, int numPoints, double cfl)
 	}
 }
 
-void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double U[4], double Uold[4], double main_store[62])
+void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double U[4], double Uold[4], double main_store[62], int euler)
 {
 	double max_res = 0.0;
 	double sig_res_sqr[1];
@@ -62,7 +62,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk);
+			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
 		}
 		else if(globaldata[idx].flag_1 == 2)
 		{
@@ -70,7 +70,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk);
+			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk, euler);
 		}
 		else if(globaldata[idx].flag_1 == 1)
 		{
@@ -78,7 +78,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk);
+			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
 		}
 	}
 
@@ -101,7 +101,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
     cout<<"\n -------------------- \n";
 }
 
-void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
+void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -141,7 +141,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
     }
 }
 
-void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
+void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -176,7 +176,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
     }
 }
 
-void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
+void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;

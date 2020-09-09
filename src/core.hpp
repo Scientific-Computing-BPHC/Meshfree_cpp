@@ -80,6 +80,9 @@ struct Config
 		int threadsperblock;
 		double gamma;
 		int clcd_flag;
+		char* tscheme;
+		int euler;
+		int rks;
 
 		Core() {}
 
@@ -124,12 +127,26 @@ struct Config
 		core.threadsperblock = 128;
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
+		core.tscheme = "first";
 
 		point_config.wall = 0;
 		point_config.interior = 1;
 		point_config.outer = 2;
 
 		format.type = "quadtree";
+
+		if(std::strcmp(core.tscheme, "first"))
+		{
+			core.rks = 1;
+			core.euler = 2;
+		}
+
+		else if(std::strcmp(core.tscheme, "ssprk43"))
+		{
+			core.rks = 4;
+			core.euler = 1;
+		}
+
 
 	}
 
