@@ -20,14 +20,6 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, doub
 
 	for(int idx=0; idx<numPoints; idx++)
 	{
-
-		// if (idx == 668)
-		// {
-		// 	cout<<"\n PHI_K ISSS: \n";
-		// 	for(int k=0; k<4; k++) cout<<phi_k[k] <<"  ";
-		// 	cout<<"\n";	
-		// }
-
 		if (globaldata[idx].flag_1 == 0)
 			wallindices_flux_residual(globaldata, gamma, idx, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const);
 		else if (globaldata[idx].flag_1 == 2)
@@ -40,123 +32,29 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, doub
 
 void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
-	
-	// if (idx == 0)
-	// {
-	// 	cout<<"\n Inside outerr PHI_K ISSS: \n";
-	// 	for(int k=0; k<4; k++) cout<<phi_k[k] <<"  ";
-	// 	cout<<"\n";	
-	// }
 
-	// if(idx == 0)
-	// {
-	// 	cout<<"Lesse how other variables are doing, and then exit at idx = 0, iter = 0 just intoooo"<<endl;
-	// 	for(int l=0; l<4; l++)
-	// 	{
-	// 		cout<<"Gamma: "<<gamma<<"Phi:  "<<phi_i[l]<<" and k "<<phi_k[l]<<" G_i:  "<<G_i[l]<<" G_k: "<<G_k[l]<<" result:  "<<result[l]<<" qtilde_i: "<<qtilde_i[l]<<" qtilde_k:  "<<qtilde_k[l]<<" sigx: "<<sig_del_x_del_f[l]<<" sigy: "<<sig_del_y_del_f[l]<<"  "<<power<<"  "<<limiter_flag<<"  "<<vl_const<<endl;
-	// 	}
-	// }
-	if(idx==0)
-	{
-		cout<<"G_i[0]: HERE "<<G_i[0]<<endl;
-		cout<<"G_k[0]: HERE "<<G_k[0]<<endl;
-		cout<<"qtilde_i[0]: HERE "<<qtilde_i[0]<<endl;
-		cout<<"qtilde_k[0]: HERE "<<qtilde_k[0]<<endl;
-	}
 
 	wall_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
-	if(idx==0)
-		cout<<"Gxp[0]: HERE "<<Gxp[0]<<endl;
 	wall_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
-	if(idx==0)
-		cout<<"Gxn[0]: HERE "<<Gxn[0]<<endl;
 	wall_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn);
-	if(idx==0)
-		cout<<"Gyn[0]: HERE "<<Gyn[0]<<endl;
-
-	// if(idx == 0)
-	// {
-	// 	cout<<"Lesse how other variables are doing, and then exit at idx = 0, iter = 0"<<endl;
-	// 	for(int l=0; l<4; l++)
-	// 	{
-	// 		cout<<"Gamma: "<<gamma<<"Phi:  "<<phi_i[l]<<" and k "<<phi_k[l]<<" G_i:  "<<G_i[l]<<" G_k: "<<G_k[l]<<" result:  "<<result[l]<<" qtilde_i: "<<qtilde_i[l]<<" qtilde_k:  "<<qtilde_k[l]<<" sigx: "<<sig_del_x_del_f[l]<<" sigy: "<<sig_del_y_del_f[l]<<"  "<<power<<"  "<<limiter_flag<<"  "<<vl_const<<endl;
-	// 	}
-	// }
-
-	// if(idx == 668)
-	// {
-	// 	cout<<"Lesse how G is"<<endl;
-	// 	for(int l=0; l<4; l++)
-	// 	{
-	// 		cout<<Gxp[l]<<"  "<<Gxn[l]<<"  "<<Gyp[l]<<"  "<<endl;
-	// 	}
-	// 	//exit(0);
-	// }
-
-	//debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
 
 	for(int i=0; i<4; i++)
 	{
 		Gxp[i] = (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
-		if(isNan(Gxp[i]))
-		{
-			cout<<"Nan in wall flux Gxp: "<<endl;
-			cout<<"Idx is: "<<idx<<endl;
-			cout<<"i is: "<<i<<endl;
-			cout<<"Gxp"<<Gxp[i]<<endl;
-			cout<<"Gxn"<<Gxn[i]<<endl;
-			cout<<"Gyn"<<Gyn[i]<<endl;
-			exit(0);
-		}
 	}
 
 	for(int i=0; i<4; i++)
 	{
 		globaldata[idx].flux_res[i] = Gxp[i];
-		if(isNan(globaldata[idx].flux_res[i]))
-		{
-			cout<<"Nan in wall flux: "<<endl;
-			cout<<"Idx is: "<<idx<<endl;
-			cout<<"i is: "<<i<<endl;
-			exit(0);
-		}
 	}
 }
 
 void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
 {
 
-	// if (idx == 1356)
-	// {
-	// 	cout<<"\n Inside outerr PHI_K ISSS: \n";
-	// 	for(int k=0; k<4; k++) cout<<phi_k[k] <<"  ";
-	// 	cout<<"\n";	
-	// }
-
-	// if(idx == 1356)
-	// {
-	// 	cout<<"Lesse how other variables are doing"<<endl;
-	// 	for(int l=0; l<4; l++)
-	// 	{
-	// 		cout<<"Gamma: "<<gamma<<"Phi:  "<<phi_i[l]<<" and k "<<phi_k[l]<<"  "<<G_i[l]<<"  "<<G_k[l]<<"  "<<qtilde_i[l]<<"  "<<qtilde_k[l]<<"  "<<endl;
-	// 	}
-	// }
-
 	outer_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
 	outer_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
 	outer_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
-
-	// if(idx == 1356)
-	// {
-	// 	cout<<"Lesse how G is"<<endl;
-	// 	for(int l=0; l<4; l++)
-	// 	{
-	// 		cout<<Gxp[l]<<"  "<<Gxn[l]<<"  "<<Gyp[l]<<"  "<<endl;
-	// 	}
-	// 	//exit(0);
-	// }
-
-	//debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
 
 	for(int i=0; i<4; i++)
 		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i]);
@@ -173,34 +71,9 @@ void interiorindices_flux_residual(Point* globaldata, double gamma, int idx, dou
 	interior_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
 	interior_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn); 
 
-	//debug_Gs_again(idx, Gxp, Gxn, Gyp, Gyn);
-
-
 	for(int i=0; i<4; i++)
 		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);
 
 	for(int i=0; i<4; i++)
 		globaldata[idx].flux_res[i] = Gxp[i];
-}
-
-void debug_Gs_again(int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4])
-{
-    std::ofstream fdebug("debug_Gs_again.txt", std::ios_base::app);
-
-    fdebug<<"\nChecking the Outputs: \n";
-
-    fdebug<<"Index (idx+1): "<<idx+1<<"\n";
-    fdebug<<"\nGxp: ";
-    for(int i=0; i<4; i++)
-        fdebug<<Gxp[i]<<"  ";
-    fdebug<<"\nGxn: ";
-    for(int i=0; i<4; i++)
-        fdebug<<Gxn[i]<<"  ";
-    fdebug<<"\nGyp: ";
-    for(int i=0; i<4; i++)
-        fdebug<<Gyp[i]<<"  ";
-    fdebug<<"\nGyn: ";
-    for(int i=0; i<4; i++)
-        fdebug<<Gyn[i]<<"  ";
-    fdebug.close();
 }

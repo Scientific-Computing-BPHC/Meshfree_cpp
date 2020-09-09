@@ -9,10 +9,4 @@ void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double
 
 void interiorindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const);
 
-void debug_Gs_again(int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4]);
-
-template <class Type>
-bool isNan(Type var);
-
-
 #endif

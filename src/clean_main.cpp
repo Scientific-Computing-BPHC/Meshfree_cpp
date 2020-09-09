@@ -36,13 +36,6 @@ bool debug_mode = true;
 void meshfree_solver(char* file_name, int num_iters);
 void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4], int max_iters);
 void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters);
-void debug_main_store(double main_store[62]);
-void debug_normals(Point* globaldata, int numPoints);
-void debug_globaldata_conn(Point* globaldata, int numPoints);
-void debug_globaldata_xpos(Point* globaldata, int numPoints);
-void debug_globaldata_ypos(Point* globaldata, int numPoints);
-void debug_globaldata_xneg(Point* globaldata, int numPoints);
-void debug_globaldata_yneg(Point* globaldata, int numPoints);
 
 int main(int argc, char **argv)
 {
@@ -153,7 +146,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	//cout<<result_doub[0][0]<<endl;
 
 
-/* Read File Old */
+/* Read File Legacy */
 
 #if 0
 	for(int idx=0; idx<numPoints; idx++)
@@ -290,20 +283,6 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	cout<<"\n-----End Read-----\n";
 
-	cout<<"\n Checking conn \n";
-	cout<<"\n"<<globaldata[46053].x<<"\t "<<globaldata[46053].y;
-	cout<<"\n"<<result_doub[46053][0]<<"\t "<<result_doub[46053][1];
-	cout<<"\n"<<result_doub[46052][0]<<"\t "<<result_doub[46052][1];
-	cout<<"\n"<<result_doub[0][0]<<"\t"<<result_doub[0][1];
-	cout<<"\n"<<globaldata[24695].x<<"\t "<<globaldata[24695].y;
-	cout<<"\n"<<globaldata[24696].x<<"\t "<<globaldata[24696].y;
-
-
-	//debug_globaldata(globaldata, numPoints, 0, 0);
-	//exit(0);
-
-
-
 	// Interior, Out and Wall were defined as Int64 in Julia, so am defining them as long long
 
 	long long interior = configData.point_config.interior;
@@ -315,20 +294,10 @@ void meshfree_solver(char* file_name, int max_iters)
 	for(int idx=0; idx<numPoints; idx++)
 		placeNormals(globaldata, idx, configData, interior, wall, outer);
 
-	debug_normals(globaldata, numPoints);
-
 	cout<<"\n-----Start Connectivity Generation-----\n";
 	for(int idx=0; idx<numPoints; idx++)
 		calculateConnectivity(globaldata, idx);
 	cout<<"\n-----Connectivity Generation Done-----\n";  
-
-	//debug_globaldata_conn(globaldata, numPoints);
-	debug_globaldata_xpos(globaldata, numPoints);
-	debug_globaldata_ypos(globaldata, numPoints);
-	debug_globaldata_xneg(globaldata, numPoints);
-	debug_globaldata_yneg(globaldata, numPoints);
-
-	/* Copying appropriate values to main store */
 
 	main_store[52] = configData.core.power;
 	main_store[53] = configData.core.cfl;
@@ -371,90 +340,4 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	double tempdq[numPoints][2][4] = {0.0};
 
 	run_code(globaldata, configData, res_old, numPoints, main_store, tempdq, max_iters);
-}
-
-void debug_main_store(double main_store[62])
-{
-    std::ofstream fdebug("debug_main_store.txt", std::ios_base::app);
-    for(int i=0; i<62; i++)
-        fdebug<<"main_store "<<i<<": "<<main_store[i]<<"\n";
-    fdebug.close();
-}
-
-void debug_normals(Point* globaldata, int numPoints)
-{
-	std::ofstream fdebug("debug_normals.txt", std::ios_base::app);
-    for(int i=0; i<numPoints; i++)
-        fdebug<<globaldata[i].nx<<"\t"<<globaldata[i].ny<<"\n";
-    fdebug.close();
-}
-
-void debug_globaldata_conn(Point* globaldata, int numPoints)
-{
-    std::ofstream fdebug("debug_globaldata_conn.txt", std::ios_base::app);
-    //fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
-    for(int i=0; i<numPoints; i++)
-    {
-        //fdebug<<"Point:  "<<i<<"\n";
-            for(int j=0; j<20; j++)
-                fdebug<<globaldata[i].conn[j]<<"  ";
-        //fdebug<<globaldata[i].x<<", ";
-    }
-    fdebug.close();
-}
-
-void debug_globaldata_xpos(Point* globaldata, int numPoints)
-{
-    std::ofstream fdebug("debug_globaldata_xpos.txt", std::ios_base::app);
-    //fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
-    for(int i=0; i<numPoints; i++)
-    {
-        //fdebug<<"Point:  "<<i<<"\n";
-            for(int j=0; j<20; j++)
-                fdebug<<globaldata[i].xpos_conn[j]<<"  ";
-        //fdebug<<globaldata[i].x<<", ";
-    }
-    fdebug.close();
-}
-
-void debug_globaldata_ypos(Point* globaldata, int numPoints)
-{
-    std::ofstream fdebug("debug_globaldata_ypos.txt", std::ios_base::app);
-    //fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
-    for(int i=0; i<numPoints; i++)
-    {
-        //fdebug<<"Point:  "<<i<<"\n";
-            for(int j=0; j<20; j++)
-                fdebug<<globaldata[i].ypos_conn[j]<<"  ";
-        //fdebug<<globaldata[i].x<<", ";
-    }
-    fdebug.close();
-}
-
-void debug_globaldata_xneg(Point* globaldata, int numPoints)
-{
-    std::ofstream fdebug("debug_globaldata_xneg.txt", std::ios_base::app);
-    //fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
-    for(int i=0; i<numPoints; i++)
-    {
-        //fdebug<<"Point:  "<<i<<"\n";
-            for(int j=0; j<20; j++)
-                fdebug<<globaldata[i].xneg_conn[j]<<"  ";
-        //fdebug<<globaldata[i].x<<", ";
-    }
-    fdebug.close();
-}
-
-void debug_globaldata_yneg(Point* globaldata, int numPoints)
-{
-    std::ofstream fdebug("debug_globaldata_yneg.txt", std::ios_base::app);
-    //fdebug<<"Iteration: "<<iter+1<<" And rk: "<<rk<<"\n";
-    for(int i=0; i<numPoints; i++)
-    {
-        //fdebug<<"Point:  "<<i<<"\n";
-            for(int j=0; j<20; j++)
-                fdebug<<globaldata[i].yneg_conn[j]<<"  ";
-        //fdebug<<globaldata[i].x<<", ";
-    }
-    fdebug.close();
 }
