@@ -34,8 +34,8 @@ typedef std::vector<long double> vec_ldoub;
 bool debug_mode = true;
 
 void meshfree_solver(char* file_name, int num_iters);
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4], int max_iters);
-void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters);
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4], int max_iters);
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters);
 
 int main(int argc, char **argv)
 {
@@ -135,7 +135,6 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	Point* globaldata = new Point[numPoints];
 	double res_old[1] = {0.0};
-	double main_store[62] = {0};
 
 	double defprimal[4];
 	getInitialPrimitive(configData, defprimal);
@@ -283,6 +282,72 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	cout<<"\n-----End Read-----\n";
 
+	if(configData.core.restart == 1)
+    {
+        char* file_name = "/home/hari/Work/Meshfree_cpp/restart.dat";
+        std::fstream datafile(file_name, ios::in);
+        std::string temp;
+        std::regex ws_re("\\s+"); 
+
+        int numPoints, max_iters;
+        double residue;
+
+        if(datafile.is_open())
+        {
+            
+            getline(datafile, temp);
+            //cout<<temp;
+            std::vector<std::string> temp_vec{std::sregex_token_iterator(temp.begin(), temp.end(), ws_re, -1), {}};
+            //cout<<"\ntemp_vec: "<<temp_vec[0]<<temp_vec[1]<<"and"<<temp_vec[2]<<"and"<<temp_vec[3]<<endl;
+            numPoints = (int) std::stod(temp_vec[1]);
+        }
+
+        std::string new_file[numPoints];
+        if(datafile.is_open())
+        {
+            for(int i=0; i<numPoints; i++)
+            {
+                getline(datafile, new_file[i]);
+            }
+        }
+        datafile.close();
+
+        std::vector<vec_str> result;
+        for(int i=0; i<numPoints; i++)  // This might include the first line as well so, you need to store that separately or just throw the 1st line away (the one that contains the file length)
+                                        // There are 48738 lines apart from that
+        { 
+            std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
+            result.push_back(temp);
+        }
+
+        std::vector<vec_doub> result_doub;
+
+        for(int j=0; j<numPoints; j++)
+        {
+            vec_doub temp;
+            for (int i=1; i<result[j].size(); i++)
+                temp.push_back(std::stod(result[j][i]));
+            result_doub.push_back(temp);
+        }
+
+
+        checkFileRead(result_doub, numPoints);
+        // for(int j=0; j<20; j++)
+        // {
+        //     for (int i=0; i<result_doub[j].size(); i++)
+        //         cout<<std::fixed<<std::setprecision(20)<<"Result Doub: "<<j<<" " <<i<<" "<<result_doub[j][i]<<endl;
+
+        // }
+
+        for(int i=0; i<numPoints; i++)
+        {
+        	for(int j=0; j<4; j++)
+        		globaldata[i].prim[j] = result_doub[i][5+j];
+        }
+
+        //cout<<"\n Check prim [0] pt"<<std::fixed<<std::setprecision(17)<<globaldata[0].prim[0]<<endl;
+    }
+
 	// Interior, Out and Wall were defined as Int64 in Julia, so am defining them as long long
 
 	long long interior = configData.point_config.interior;
@@ -299,20 +364,9 @@ void meshfree_solver(char* file_name, int max_iters)
 		calculateConnectivity(globaldata, idx);
 	cout<<"\n-----Connectivity Generation Done-----\n";  
 
-	main_store[52] = configData.core.power;
-	main_store[53] = configData.core.cfl;
-	main_store[54] = configData.core.limiter_flag; //Remember you may need to typecast this back to int later
-	main_store[55] = configData.core.vl_const;
-	main_store[56] = configData.core.aoa;
-	main_store[57] = configData.core.mach;
-	main_store[58] = configData.core.gamma;
-	main_store[59] = configData.core.pr_inf;
-	main_store[60] = configData.core.rho_inf;
-	main_store[61] = calculateTheta(configData);
-
 	cout<<"\n"<<max_iters+1<<endl;
 
-	test_code(globaldata, configData, res_old, numPoints, main_store, max_iters);
+	test_code(globaldata, configData, res_old, numPoints, max_iters);
 
 	// Open the timer and print the timer that benchmarks all of these
 
@@ -321,17 +375,17 @@ void meshfree_solver(char* file_name, int max_iters)
 }	
 
 
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4], int max_iters)
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4], int max_iters)
 {
 	for (int i=0; i<max_iters; i++)
 	{
 		//debug_main_store(main_store);
-		fpi_solver(i, globaldata, configData, res_old, numPoints, main_store, tempdq);
+		fpi_solver(i, globaldata, configData, res_old, numPoints, tempdq);
 	}
 }
 
 
-void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], int max_iters)
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters)
 {
 	cout<<"\nStarting warmup function \n";
 	res_old[0] = 0.0;
@@ -339,5 +393,5 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	cout<<"\nStarting main function \n";
 	double tempdq[numPoints][2][4] = {0.0};
 
-	run_code(globaldata, configData, res_old, numPoints, main_store, tempdq, max_iters);
+	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters);
 }

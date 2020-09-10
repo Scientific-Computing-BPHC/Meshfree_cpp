@@ -11,32 +11,32 @@ bool isNan(Type var)
     return false;
 }
 
-void cal_flux_residual(Point* globaldata, int numPoints, Config configData, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double main_store[62])
+void cal_flux_residual(Point* globaldata, int numPoints, Config configData)
 {
-	double power = main_store[52];
-	double limiter_flag = main_store[54];
-	double vl_const = main_store[55];
-	double gamma = main_store[58];
+
+	double Gxp[4] = {0}, Gxn[4] = {0}, Gyp[4] = {0}, Gyn[4] = {0};
 
 	for(int idx=0; idx<numPoints; idx++)
 	{
+		
+
 		if (globaldata[idx].flag_1 == 0)
-			wallindices_flux_residual(globaldata, gamma, idx, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const);
+			wallindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
 		else if (globaldata[idx].flag_1 == 2)
-			outerindices_flux_residual(globaldata, gamma, idx, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const);
+			outerindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
 		else if (globaldata[idx].flag_1 == 1)
-			interiorindices_flux_residual(globaldata, gamma, idx, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const);
+			interiorindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
 
 	}
 }
 
-void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
+void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
 {
 
 
-	wall_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
-	wall_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
-	wall_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn);
+	wall_dGx_pos(globaldata, idx, Gxp, configData);
+	wall_dGx_neg(globaldata, idx, Gxn, configData);
+	wall_dGy_neg(globaldata, idx, Gyn, configData);
 
 	for(int i=0; i<4; i++)
 	{
@@ -49,12 +49,12 @@ void wallindices_flux_residual(Point* globaldata, double gamma, int idx, double 
 	}
 }
 
-void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
+void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
 {
 
-	outer_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
-	outer_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
-	outer_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
+	outer_dGx_pos(globaldata, idx, Gxp, configData);
+	outer_dGx_neg(globaldata, idx, Gxn, configData);
+	outer_dGy_pos(globaldata, idx, Gyp, configData);
 
 	for(int i=0; i<4; i++)
 		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i]);
@@ -64,12 +64,12 @@ void outerindices_flux_residual(Point* globaldata, double gamma, int idx, double
 
 }
 
-void interiorindices_flux_residual(Point* globaldata, double gamma, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const)
+void interiorindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
 {
-	interior_dGx_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxp);
-	interior_dGx_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gxn);
-	interior_dGy_pos(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyp);
-	interior_dGy_neg(globaldata, idx, gamma, phi_i, phi_k, G_i, G_k, result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, power, limiter_flag, vl_const, Gyn); 
+	interior_dGx_pos(globaldata, idx, Gxp, configData);
+	interior_dGx_neg(globaldata, idx, Gxn, configData);
+	interior_dGy_pos(globaldata, idx, Gyp, configData);
+	interior_dGy_neg(globaldata, idx, Gyn, configData); 
 
 	for(int i=0; i<4; i++)
 		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);

@@ -10,9 +10,17 @@ bool isNan(Type var)
     return false;
 }
 
-void wall_dGx_pos(Point* globaldata, int idx, double gamma, double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const, double Gxp[4])
+void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 {
-	double sig_del_x_sqr = 0.0;
+	
+    double power = configData.core.power;
+    int limiter_flag = configData.core.limiter_flag;
+    double vl_const = configData.core.vl_const;
+    double gamma = configData.core.gamma;
+
+    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, result[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+
+    double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
 	double sig_del_x_del_y = 0.0;
 
@@ -63,9 +71,16 @@ void wall_dGx_pos(Point* globaldata, int idx, double gamma, double phi_i[4], dou
 	
 }
 
-void wall_dGx_neg(Point* globaldata, int idx, double gamma, double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const, double Gxn[4])
+void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 {
-	double sig_del_x_sqr = 0.0;
+    double power = configData.core.power;
+    int limiter_flag = configData.core.limiter_flag;
+    double vl_const = configData.core.vl_const;
+    double gamma = configData.core.gamma;
+
+    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, result[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+
+    double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
 	double sig_del_x_del_y = 0.0;
 
@@ -117,9 +132,16 @@ void wall_dGx_neg(Point* globaldata, int idx, double gamma, double phi_i[4], dou
 	
 }
 
-void wall_dGy_neg(Point* globaldata, int idx, double gamma, double phi_i[4], double phi_k[4], double G_i[4], double G_k[4], double result[4], double qtilde_i[4], double qtilde_k[4], double sig_del_x_del_f[4], double sig_del_y_del_f[4], double power, int limiter_flag, double vl_const, double Gyn[4])
+void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], Config configData)
 {
-	double sig_del_x_sqr = 0.0;
+	double power = configData.core.power;
+    int limiter_flag = configData.core.limiter_flag;
+    double vl_const = configData.core.vl_const;
+    double gamma = configData.core.gamma;
+
+    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, result[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+
+    double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
 	double sig_del_x_del_y = 0.0;
 

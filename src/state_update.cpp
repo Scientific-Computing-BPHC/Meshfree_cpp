@@ -40,19 +40,21 @@ void func_delta(Point* globaldata, int numPoints, double cfl)
 	}
 }
 
-void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double U[4], double Uold[4], double main_store[62], int euler, int rks)
+void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks)
 {
 	double max_res = 0.0;
 	double sig_res_sqr[1];
 	sig_res_sqr[0] = 0.0;
 
-	double Mach = main_store[57];
-	double gamma = main_store[58];
-	double pr_inf = main_store[59];
-	double rho_inf = main_store[60];
-	double theta = main_store[61];
+	double Mach = configData.core.mach;
+	double gamma = configData.core.gamma;
+	double pr_inf = configData.core.pr_inf;
+	double rho_inf = configData.core.rho_inf;
+	double theta = configData.core.aoa * (M_PI)/180.0;
 
-    //print_state_update_params(globaldata, numPoints, iter, rk, res_old, U, Uold, main_store);
+    int euler = configData.core.euler;
+
+    double U[4], Uold[4] = {0};
 
 	for(int idx =0; idx<numPoints; idx++)
 	{
@@ -109,7 +111,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
 
     for (int iter=0; iter<4; iter++)
     {
-        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].delta * globaldata[idx].flux_res[iter];
     }
 
     if (rk == 2)
@@ -147,7 +149,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].delta * globaldata[idx].flux_res[iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
@@ -182,7 +184,7 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].delta * globaldata[idx].flux_res[iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)

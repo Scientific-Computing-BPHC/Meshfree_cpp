@@ -29,7 +29,7 @@ void checkFileRead(std::vector<vec_doub> result_doub, int numPoints)
     {
 		for (int i=0; i<result_doub[j].size(); i++)
 			out<<std::fixed<<std::setprecision(20)<<result_doub[j][i]<<"   ";
-		cout<<endl;
+		out<<endl;
 	}
 	out.close();
 

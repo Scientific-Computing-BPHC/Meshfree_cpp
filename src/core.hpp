@@ -83,6 +83,7 @@ struct Config
 		char* tscheme;
 		int euler;
 		int rks;
+		int restart;
 
 		Core() {}
 
@@ -113,7 +114,7 @@ struct Config
 	{
 		core.points = 48738;
 		core.cfl = 0.2;
-		core.max_iters = 10;
+		core.max_iters = 3;
 		core.mach = 0.63;
 		core.aoa = 2;
 		core.power = 0.0;
@@ -124,10 +125,11 @@ struct Config
 		core.shapes = 1.0;
 		core.rho_inf = 1.0;
 		core.pr_inf = 0.7142857142857142;
-		core.threadsperblock = 128;
+		core.threadsperblock = 32;
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
-		core.tscheme = "ssprk43";
+		core.tscheme = "first";
+		core.restart = 1;
 
 		point_config.wall = 0;
 		point_config.interior = 1;
@@ -135,13 +137,13 @@ struct Config
 
 		format.type = "quadtree";
 
-		if(std::strcmp(core.tscheme, "first"))
+		if(std::strcmp(core.tscheme, "first") == 0)
 		{
 			core.rks = 1;
 			core.euler = 2;
 		}
 
-		else if(std::strcmp(core.tscheme, "ssprk43"))
+		else if(std::strcmp(core.tscheme, "ssprk43") == 0)
 		{
 			core.rks = 4;
 			core.euler = 1;
@@ -188,13 +190,13 @@ xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
 
 void calculateConnectivity(Point* globaldata, int idx);
 
-void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4]);
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4]);
 
-void q_variables(Point* globaldata, int numPoints, double q_result[4]);
+void q_variables(Point* globaldata, int numPoints);
 
-void q_var_derivatives(Point* globaldata, int numPoints, double power, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4]);
+void q_var_derivatives(Point* globaldata, int numPoints, double power);
 
-void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4]);
+void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4]);
 
 template <class Type>
 bool isNan(Type var);

@@ -2,6 +2,7 @@
 #include "point.hpp"
 #include "state_update.hpp"
 #include "flux_residual.hpp"
+#include "utils.hpp"
 
 inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2]);
 inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
@@ -15,15 +16,9 @@ bool isNan(Type var)
 }
 
 
-
-inline double deg2rad(double radians) {
-    return radians * (180.0 / M_PI);
-}
-
 double calculateTheta(Config configData)
 {
-	double theta = deg2rad(configData.core.aoa);
-	return theta;
+    return (configData.core.aoa * (M_PI)/180.0);
 }
 
 void getInitialPrimitive(Config configData, double primal[4])
@@ -35,6 +30,7 @@ void getInitialPrimitive(Config configData, double primal[4])
 	primal[1] = machcos;
 	primal[2] = machsin;
 	primal[3] = configData.core.pr_inf;
+
 }
 
 void placeNormals(Point* globaldata, int idx, Config configData, long long interior, long long wall, long long outer)
@@ -190,60 +186,65 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 }
 
-void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double main_store[62], double tempdq[][2][4])
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4])
 {
     if (iter == 0)
         cout<<"\nStarting FuncDelta"<<endl;
 
-    double power = main_store[52];
-    double cfl = main_store[53];
-
     int rks = configData.core.rks;
-    int euler = configData.core.euler;
-
+    double cfl = configData.core.cfl;
+    double power = configData.core.power;
     func_delta(globaldata, numPoints, cfl);
-
-    double *phi_i, *phi_k, *G_i, *G_k, *result, *qtilde_i, *qtilde_k;
-    double *Gxp, *Gxn, *Gyp, *Gyn, *sig_del_x_del_f, *sig_del_y_del_f;
-
-    int i = 0;
-    phi_i = &(main_store[i]);
-    phi_k = &(main_store[i+4]);
-    G_i = &(main_store[i+8]);
-    G_k = &(main_store[i+12]);
-    result = &(main_store[i+16]);
-    qtilde_i = &(main_store[i+20]);
-    qtilde_k = &(main_store[i+24]);
-    Gxp = &(main_store[i+28]);
-    Gxn = &(main_store[i+32]);
-    Gyp = &(main_store[i+36]);
-    Gyn = &(main_store[i+40]);
-    sig_del_x_del_f = &(main_store[i+44]);
-    sig_del_y_del_f = &(main_store[i+48]);
 
     for(int rk=0; rk<rks; rk++)
     {
 
-        q_variables(globaldata, numPoints, result);
+        q_variables(globaldata, numPoints);
 
-        q_var_derivatives(globaldata, numPoints, power, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
-
-        for(int inner_iters=0; inner_iters<3; inner_iters++)
+        q_var_derivatives(globaldata, numPoints, power);
+        cout<<endl;
+        for(int index = 0; index<4; index++)
         {
-            q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k);
+            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].q[index]<<"   ";
+        }
+        cout<<endl;
+        for(int index = 0; index<4; index++)
+        {
+            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].dq1[index]<<"   ";
+        }
+        cout<<endl;
+        for(int index = 0; index<4; index++)
+        {
+            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].dq2[index]<<"   ";
+        }
+        cout<<endl;
+
+        for(int inner_iters=0; inner_iters<0; inner_iters++)
+        {
+            q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq);
         }
 
-        cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
-            result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        // cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
+        //     result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
 
-        state_update(globaldata, numPoints, configData, iter, res_old, rk, sig_del_x_del_f, sig_del_y_del_f, main_store, euler, rks);
+        cal_flux_residual(globaldata, numPoints, configData);
+
+
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[0].flux_res[index]<<"   ";
+        // }
+
+        state_update(globaldata, numPoints, configData, iter, res_old, rk, rks);
 
     }
 }
 
-void q_variables(Point* globaldata, int numPoints, double q_result[4])
+void q_variables(Point* globaldata, int numPoints)
 {
-
+    double q_result[4] = {0};
+    
     for(int idx=0; idx<numPoints; idx++)
     {
         double rho = globaldata[idx].prim[0];
@@ -265,8 +266,10 @@ void q_variables(Point* globaldata, int numPoints, double q_result[4])
 
 }
 
-void q_var_derivatives(Point* globaldata, int numPoints, double power, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double max_q[4], double min_q[4])
+void q_var_derivatives(Point* globaldata, int numPoints, double power)
 {
+
+    double sig_del_x_del_q[4], sig_del_y_del_q[4], min_q[4], max_q[4];
 
     for(int idx=0; idx<numPoints; idx++)
     {
@@ -290,13 +293,9 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
 
         for(int i=0; i<20; i++)
         {
-            //cout<<"\n Count "<<i<<endl;
             int conn = globaldata[idx].conn[i];
             if(conn == 0) 
             {
-                //cout<<"BROKENNNNNN Lesse i"<<i<<endl;
-                //cout<<"Just to check if exiting";
-                //exit(0);
                 break;
             }
 
@@ -317,8 +316,8 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
             for(int iter=0; iter<4; iter++)
             {
                 double intermediate_var = weights * (globaldata[conn].q[iter] - globaldata[idx].q[iter]);
-                sig_del_x_del_q[iter] += (delta_x * intermediate_var);
-                sig_del_y_del_q[iter] += (delta_y * intermediate_var);
+                sig_del_x_del_q[iter] = sig_del_x_del_q[iter] + (delta_x * intermediate_var);
+                sig_del_y_del_q[iter] = sig_del_y_del_q[iter] + (delta_y * intermediate_var);
 
             }
 
@@ -343,31 +342,24 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power, double si
             globaldata[idx].min_q[i] = min_q[i];
         }
 
-        q_var_derivatives_update(sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, sig_del_x_del_q, sig_del_y_del_q, max_q, min_q);
+        //q_var_derivatives_update(sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, sig_del_x_del_q, sig_del_y_del_q, max_q, min_q);
 
-        for(int i=0; i<4; i++)
+        double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
+        double one_by_det = 1.0/det;
+
+        for(int iter=0; iter<4; iter++)
         {
-            globaldata[idx].dq1[i] = max_q[i];
-            globaldata[idx].dq2[i] = min_q[i];
+            globaldata[idx].dq1[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
+            globaldata[idx].dq2[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
         }
 
     }
 }
 
-inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2])
-{
-    double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
-    double one_by_det = 1.0/det;
-
-    for(int iter=0; iter<4; iter++)
-    {
-        dq1_store[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
-        dq2_store[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
-    }
-}
-
-void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double qi_tilde[4], double qk_tilde[4])
+void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4])
 {   
+
+    double sig_del_x_del_q[4], sig_del_y_del_q[4], qi_tilde[4] ={0}, qk_tilde[4] = {0};
 
     for(int idx=0; idx<numPoints; idx++)
     {
