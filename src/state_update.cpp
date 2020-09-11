@@ -93,7 +93,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 		residue = 0.0;
 	}
 	else
-		residue = log(res_new/res_old[0]);
+		residue = log10(res_new/res_old[0]);
 
 	if(rk == rks-1)
 		cout<<std::fixed<<std::setprecision(17)<<"\nResidue: "<<iter+1<<" "<<residue<<endl;
@@ -111,7 +111,7 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
 
     for (int iter=0; iter<4; iter++)
     {
-        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
     }
 
     if (rk == 2)
@@ -149,7 +149,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
@@ -184,7 +184,7 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
