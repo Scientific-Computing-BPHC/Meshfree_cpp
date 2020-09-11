@@ -202,30 +202,28 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         q_variables(globaldata, numPoints);
 
         q_var_derivatives(globaldata, numPoints, power);
-        cout<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].q[index]<<"   ";
-        }
-        cout<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].dq1[index]<<"   ";
-        }
-        cout<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].dq2[index]<<"   ";
-        }
-        cout<<endl;
 
-        for(int inner_iters=0; inner_iters<0; inner_iters++)
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[46052].q[index]<<"   ";
+        // }
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[46052].dq1[index]<<"   ";
+        // }
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[46052].dq2[index]<<"   ";
+        // }
+        // cout<<endl;
+
+        for(int inner_iters=0; inner_iters<3; inner_iters++)
         {
             q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq);
-        }
-
-        // cal_flux_residual(globaldata, numPoints, configData, Gxp, Gxn, Gyp, Gyn, phi_i, phi_k, G_i, G_k,
-        //     result, qtilde_i, qtilde_k, sig_del_x_del_f, sig_del_y_del_f, main_store);
+        };
 
         cal_flux_residual(globaldata, numPoints, configData);
 
@@ -237,6 +235,12 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         // }
 
         state_update(globaldata, numPoints, configData, iter, res_old, rk, rks);
+
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[46052].prim[index]<<"   ";
+        // }
 
     }
 }
@@ -321,6 +325,17 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power)
 
             }
 
+            // if(idx == 0)
+            // {
+
+            //     cout<<"Conn: "<<conn<<endl;
+            //     for(int index = 0; index<4; index++)
+            //     {
+            //         cout<<std::fixed<<std::setprecision(17)<<globaldata[conn].q[index]<<"   ";
+            //     }
+            //     cout<<endl;
+            // }
+
             for(int j=0; j<4; j++)
             {
                 if (max_q[j] < globaldata[conn].q[j])
@@ -346,6 +361,22 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power)
 
         double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
         double one_by_det = 1.0/det;
+
+        // if(idx == 0)
+        // {
+
+        //     cout<<endl;
+        //     for(int index = 0; index<4; index++)
+        //     {
+        //         cout<<std::fixed<<std::setprecision(17)<<sig_del_x_del_q[index]<<"   ";
+        //     }
+        //     cout<<endl;
+        //     for(int index = 0; index<4; index++)
+        //     {
+        //         cout<<std::fixed<<std::setprecision(17)<<sig_del_y_del_q[index]<<"   ";
+        //     }
+
+        // }
 
         for(int iter=0; iter<4; iter++)
         {

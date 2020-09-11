@@ -128,8 +128,8 @@ struct Config
 		core.threadsperblock = 32;
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
-		core.tscheme = "first";
-		core.restart = 1;
+		core.tscheme = "ssprk43";
+		core.restart = 0;
 
 		point_config.wall = 0;
 		point_config.interior = 1;

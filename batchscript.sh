@@ -59,5 +59,5 @@ touch debug_state_update.txt
 touch debug_Gs_again.txt
 make clean
 make 
-./clean_meshfree /opt/grids/quadtree/part/partGrid40K 1
+./clean_meshfree /opt/grids/quadtree/part/partGrid40K 10
 

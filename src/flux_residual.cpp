@@ -18,7 +18,6 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData)
 
 	for(int idx=0; idx<numPoints; idx++)
 	{
-		
 
 		if (globaldata[idx].flag_1 == 0)
 			wallindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
@@ -38,14 +37,16 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 	wall_dGx_neg(globaldata, idx, Gxn, configData);
 	wall_dGy_neg(globaldata, idx, Gyn, configData);
 
+	double Gtemp[4] = {0};
+
 	for(int i=0; i<4; i++)
 	{
-		Gxp[i] = (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
+		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
 	}
 
 	for(int i=0; i<4; i++)
 	{
-		globaldata[idx].flux_res[i] = Gxp[i];
+		globaldata[idx].flux_res[i] = Gtemp[i];
 	}
 }
 
@@ -56,11 +57,37 @@ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], doubl
 	outer_dGx_neg(globaldata, idx, Gxn, configData);
 	outer_dGy_pos(globaldata, idx, Gyp, configData);
 
-	for(int i=0; i<4; i++)
-		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i]);
+	double Gtemp[4] = {0};
+
+	// if(idx == 1356)
+	// {
+	//     cout<<endl;
+ //        for(int index = 0; index<4; index++)
+ //        {
+ //            cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
+ //        }
+ //        cout<<endl;
+ //        for(int index = 0; index<4; index++)
+ //        {
+ //            cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
+ //        }
+ //        cout<<endl;
+ //        for(int index = 0; index<4; index++)
+ //        {
+ //            cout<<std::fixed<<std::setprecision(17)<<Gyp[index]<<"   ";
+ //        }
+ //        // cout<<endl;
+ //        // for(int index = 0; index<4; index++)
+ //        // {
+ //        //     cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
+ //        // }
+ //    }
 
 	for(int i=0; i<4; i++)
-		globaldata[idx].flux_res[i] = Gxp[i];
+		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i]);
+
+	for(int i=0; i<4; i++)
+		globaldata[idx].flux_res[i] = Gtemp[i];
 
 }
 
@@ -71,9 +98,11 @@ void interiorindices_flux_residual(Point* globaldata, int idx, double Gxp[4], do
 	interior_dGy_pos(globaldata, idx, Gyp, configData);
 	interior_dGy_neg(globaldata, idx, Gyn, configData); 
 
-	for(int i=0; i<4; i++)
-		Gxp[i] = (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);
+	double Gtemp[4] = {0};
 
 	for(int i=0; i<4; i++)
-		globaldata[idx].flux_res[i] = Gxp[i];
+		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);
+
+	for(int i=0; i<4; i++)
+		globaldata[idx].flux_res[i] = Gtemp[i];
 }
