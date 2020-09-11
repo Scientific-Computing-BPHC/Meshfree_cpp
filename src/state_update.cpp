@@ -40,19 +40,21 @@ void func_delta(Point* globaldata, int numPoints, double cfl)
 	}
 }
 
-void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, double U[4], double Uold[4], double main_store[62])
+void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks)
 {
 	double max_res = 0.0;
 	double sig_res_sqr[1];
 	sig_res_sqr[0] = 0.0;
 
-	double Mach = main_store[57];
-	double gamma = main_store[58];
-	double pr_inf = main_store[59];
-	double rho_inf = main_store[60];
-	double theta = main_store[61];
+	double Mach = configData.core.mach;
+	double gamma = configData.core.gamma;
+	double pr_inf = configData.core.pr_inf;
+	double rho_inf = configData.core.rho_inf;
+	double theta = configData.core.aoa * (M_PI)/180.0;
 
-    //print_state_update_params(globaldata, numPoints, iter, rk, res_old, U, Uold, main_store);
+    int euler = configData.core.euler;
+
+    double U[4], Uold[4] = {0};
 
 	for(int idx =0; idx<numPoints; idx++)
 	{
@@ -62,17 +64,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk);
-            if(isNan(sig_res_sqr[0]))
-            {
-                cout<<"Debug details: "<<endl;
-                cout<<"iter: "<<iter<<endl;
-                cout<<"rk: "<<rk<<endl;
-                cout<<"idx: "<<idx<<endl;
-                cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-                exit(0);
-            }
-
+			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
 		}
 		else if(globaldata[idx].flag_1 == 2)
 		{
@@ -80,16 +72,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk);
-            if(isNan(sig_res_sqr[0]))
-            {
-                cout<<"Debug details: "<<endl;
-                cout<<"iter: "<<iter<<endl;
-                cout<<"rk: "<<rk<<endl;
-                cout<<"idx: "<<idx<<endl;
-                cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-                exit(0);
-            }
+			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk, euler);
 		}
 		else if(globaldata[idx].flag_1 == 1)
 		{
@@ -97,30 +80,11 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk);
-            if(isNan(sig_res_sqr[0]))
-            {
-                cout<<"Debug details: "<<endl;
-                cout<<"iter: "<<iter<<endl;
-                cout<<"rk: "<<rk<<endl;
-                cout<<"idx: "<<idx<<endl;
-                cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-                exit(0);
-            }
+			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
 		}
-
-        //track_sig_res_sqr(sig_res_sqr, iter, rk, idx);
 	}
 
 	double res_new = sqrt(sig_res_sqr[0])/numPoints;
-    if(res_new!=res_new)
-    {
-        cout<<"\nRes_New is Nan\n";
-        cout<<"sig_res_sqr is: "<<sig_res_sqr[0]<<"\n";
-        cout<<"Iter is: "<<iter<<endl;
-        cout<<"rk is: "<<rk<<endl;
-        exit(0);
-    }
 	double residue = 0.0;
 
 	if(iter<=1)
@@ -129,106 +93,31 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 		residue = 0.0;
 	}
 	else
-		residue = log(res_new/res_old[0]);
+		residue = log10(res_new/res_old[0]);
 
-    cout<<"\nResidue is: "<<std::setprecision(17)<<residue<<" at rk: (rk+1) "<<rk+1<<endl;
-
-	if(rk == 3)
+	if(rk == rks-1)
 		cout<<std::fixed<<std::setprecision(17)<<"\nResidue: "<<iter+1<<" "<<residue<<endl;
-
-    cout<<"\n -------------------- \n";
 }
 
-void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
+void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
 
-    // if(idx == 0 && rk ==2)
-    // {
-    //     for(int i=0; i<4; i++)
-    //     {
-    //         cout<<"BEFORE: "<<"prim: "<<i<<" "<<globaldata[idx].prim[i]<<", Prim Old: "<<i<<" "<<globaldata[idx].prim_old[i]<<", U: "<<i<<" "<<U[i]<<", Uold: "<<i<<" "<<Uold[i]<<endl;
-    //     }
-    // }
-
-    if(idx == 0)
-    {
-        for(int i=0; i<4; i++)
-        {
-            cout<<"BEFORE: "<<"U: "<<i<<" "<<U[i]<<", Uold: "<<i<<" "<<Uold[i]<<endl;
-        }
-    }
-
     primitive_to_conserved(globaldata[idx].prim, nx, ny, U);
     primitive_to_conserved(globaldata[idx].prim_old, nx, ny, Uold);
 
-    // if(idx == 0 && rk ==2)
-    // {
-    //     for(int i=0; i<4; i++)
-    //     {
-    //         cout<<"AFTER: "<<"prim: "<<i<<" "<<globaldata[idx].prim[i]<<", Prim Old: "<<i<<" "<<globaldata[idx].prim_old[i]<<", U: "<<i<<" "<<U[i]<<", Uold: "<<i<<" "<<Uold[i];
-    //     }
-    // }
-
-    if(idx == 0)
-    {
-        for(int i=0; i<4; i++)
-        {
-            cout<<"AFTER: "<<"U: "<<i<<" "<<U[i]<<", Uold: "<<i<<" "<<Uold[i]<<endl;
-        }
-    }
-
     double temp = U[0];
-
-    if(isNan(temp))
-    {
-        cout<<"Nanning here temp"<<endl;
-        cout<<"Debug details: "<<endl;
-        cout<<"rk: "<<rk<<endl;
-        cout<<"idx: "<<idx<<endl;
-        cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-        exit(0);
-    }
-
-    if(idx ==0)
-    {
-        cout<<"In rk: "<<rk+1<<" U[0] before: "<<U[0]<<endl;
-        cout<<"Delta: "<<globaldata[idx].delta<<" Flux Res[0] before: "<<globaldata[idx].flux_res[0]<<endl;
-    }
-
 
     for (int iter=0; iter<4; iter++)
     {
-        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
-        if(isNan(U[iter]))
-        {
-            cout<<"Nanning here U update"<<endl;
-            cout<<"Debug details: "<<endl;
-            cout<<"rk: "<<rk<<endl;
-            cout<<"idx: "<<idx<<endl;
-            cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-            cout<<"flux_res: "<<globaldata[idx].flux_res[iter]<<endl;
-            cout<<"delta: "<<globaldata[idx].delta<<endl;
-            cout<<"What kinda point is this: "<<globaldata[idx].flag_1<<endl;
-            exit(0);
-        }
-    }
-
-    if(idx ==0)
-    {
-        cout<<"In rk: "<<rk+1<<" U[0] after 1: "<<U[0]<<endl;
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
     }
 
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
             U[iter] = U[iter] * ((double)1.0)/3.0 + Uold[iter] * ((double)2.0)/3.0;
-    }
-
-    if(idx ==0)
-    {
-        cout<<"In rk: "<<rk+1<<" U[0] after 2: "<<U[0]<<endl;
     }
 
     U[2] = 0.0;
@@ -238,60 +127,19 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
     U[2] = U3_rot*ny - U2_rot*nx;
     double res_sqr = (U[0] - temp)*(U[0] - temp);
 
-    if(isNan(res_sqr))
-        {
-            cout<<"Nanning here resssqr"<<endl;
-            cout<<"Debug details: "<<endl;
-            cout<<"rk: "<<rk<<endl;
-            cout<<"idx: "<<idx<<endl;
-            cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-            cout<<"temp: "<<temp<<endl;
-            cout<<"U: "<<U[0]<<endl;
-            cout<<"What kinda point is this: "<<globaldata[idx].flag_1<<endl;
-            exit(0);
-        }
-
     sig_res_sqr[0] += res_sqr;
     Uold[0] = U[0];
     temp = 1.0 / U[0];
-    if(idx == 0)
-    {
-        cout<<"Temp: "<<temp<<endl;
-        cout<<"U[0] is: "<<U[0]<<endl<<endl;
-    }
     Uold[1] = U[1]*temp;
     Uold[2] = U[2]*temp;
     Uold[3] = (0.4*U[3]) - ((0.2 * temp) * (U[1] * U[1] + U[2] * U[2]));
     for(int i=0; i<4; i++)
     {
     	globaldata[idx].prim[i] = Uold[i];
-        if(isNan(Uold[i]))
-        {
-            cout<<"Nanning here"<<endl;
-            cout<<"Debug details: "<<endl;
-            cout<<"rk: "<<rk<<endl;
-            cout<<"idx: "<<idx<<endl;
-            cout<<"flag: "<<globaldata[idx].flag_1<<endl;
-            exit(0);
-        }
-
-        if(globaldata[idx].prim[0] < 0)
-        {
-            cout<<"Stopping inside state update file coz something is wrong"<<endl;
-            cout<<"Idx is: "<<idx<<endl;
-            cout<<"Nx is: "<<globaldata[idx].nx<<endl;
-            cout<<"Ny is: "<<globaldata[idx].ny<<endl;
-            cout<<"U[0] is: "<<U[0]<<endl;
-            cout<<"Flux res[0] is for this idx: "<<globaldata[idx].flux_res[0]<<endl;
-            cout<<"rk is: "<<rk<<endl;
-            cout<<"Delta is: "<<globaldata[idx].delta<<endl;
-            cout<<"What kinda point is this: "<<globaldata[idx].flag_1<<endl;
-            exit(0);
-        }
     }
 }
 
-void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
+void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -301,7 +149,7 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
@@ -323,23 +171,10 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
     for(int i=0; i<4; i++)
     {
     	globaldata[idx].prim[i] = Uold[i];
-        if(globaldata[idx].prim[0] < 0)
-        {
-            cout<<"Stopping inside state update file coz something is wrong"<<endl;
-            cout<<"Idx is: "<<idx<<endl;
-            cout<<"Nx is: "<<globaldata[idx].nx<<endl;
-            cout<<"Ny is: "<<globaldata[idx].ny<<endl;
-            cout<<"U[0] is: "<<U[0]<<endl;
-            cout<<"Flux res[0] is for this idx: "<<globaldata[idx].flux_res[0];
-            cout<<"rk is: "<<rk<<endl;
-            cout<<"Delta is: "<<globaldata[idx].delta<<endl;
-            cout<<"What kinda point is this: "<<globaldata[idx].flag_1<<endl;
-            exit(0);
-        }
     }
 }
 
-void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk)
+void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -349,7 +184,7 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * globaldata[idx].delta * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
@@ -371,19 +206,6 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
     for(int i=0; i<4; i++)
     {
     	globaldata[idx].prim[i] = Uold[i];
-         if(globaldata[idx].prim[0] < 0)
-        {
-            cout<<"Stopping inside state update file coz something is wrong"<<endl;
-            cout<<"Idx is: "<<idx<<endl;
-            cout<<"Nx is: "<<globaldata[idx].nx<<endl;
-            cout<<"Ny is: "<<globaldata[idx].ny<<endl;
-            cout<<"U[0] is: "<<U[0]<<endl;
-            cout<<"Flux res[0] is for this idx: "<<globaldata[idx].flux_res[0];
-            cout<<"rk is: (rk+1)  "<<rk+1<<endl;
-            cout<<"Delta is: "<<globaldata[idx].delta<<endl;
-            cout<<"What kinda point is this: "<<globaldata[idx].flag_1<<endl;
-            exit(0);
-        }
     }
 }
 
@@ -447,56 +269,3 @@ inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double n
     Ubar[3] = (temp1 + temp2);
 }
 
-void track_sig_res_sqr(double sig_res_sqr[1], int iter, int rk, int idx)
-{
-    std::ofstream fdebug("debug_res_sqr.txt", std::ios_base::app);
-    fdebug<<"Iteration: "<<iter+1<<" And rk: (both + 1)  "<<rk+1<<" And Point:  "<<idx<<"  ";
-    fdebug<<std::setprecision(17)<<sig_res_sqr[0]<<"\n";
-        //fdebug<<globaldata[i].x<<", "
-    fdebug.close();
-}
-
-void print_state_update_params(Point* globaldata, int numPoints, int iter, int rk, double res_old[1], double U[4], double Uold[4], double main_store[62])
-{
-    std::ofstream fdebug("debug_state_update.txt", std::ios_base::app);
-    fdebug<<"Iteration: "<<iter+1<<" And rk: (both + 1)  "<<rk+1<<"\n";
-    fdebug<<std::setprecision(17)<<"Res Old:  "<<res_old[0]<<"\n";
-    fdebug<<"\nU: ";
-    for(int i=0; i<4; i++)
-        fdebug<<U[i]<<"  ";
-    fdebug<<"\nUold: ";
-    for(int i=0; i<4; i++)
-        fdebug<<Uold[i]<<"  ";
-    fdebug<<"\nMain store: ";
-    for(int i=0; i<62; i++)
-        fdebug<<main_store[i]<<"  ";
-    fdebug<<"\nFlux Res: ";
-    for(int i=0; i<numPoints; i++)
-    {
-        fdebug<<"\n";
-        for(int j=0; j<4; j++)
-            fdebug<<globaldata[i].flux_res[j]<<", ";
-    }
-    fdebug<<"\nPrim: ";
-    for(int i=0; i<numPoints; i++)
-    {
-        fdebug<<"\n";
-        for(int j=0; j<4; j++)
-            fdebug<<globaldata[i].prim[j]<<", ";
-    }
-    fdebug<<"\ndq1: ";
-    for(int i=0; i<numPoints; i++)
-    {
-        fdebug<<"\n";
-        for(int j=0; j<4; j++)
-            fdebug<<globaldata[i].dq1[j]<<", ";
-    }
-    fdebug<<"\ndq2: ";
-    for(int i=0; i<numPoints; i++)
-    {
-        fdebug<<"\n";
-        for(int j=0; j<4; j++)
-            fdebug<<globaldata[i].dq2[j]<<", ";
-    }
-    fdebug.close();
-}

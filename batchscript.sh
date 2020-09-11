@@ -35,6 +35,7 @@ rm debug_Gs.txt
 rm debug_Gs_again.txt
 rm debug_res_sqr.txt
 rm debug_state_update.txt
+rm checkFileRead.txt
 touch debug_output.txt
 touch debug_main_store.txt
 touch debug_main_store_2.txt
@@ -58,5 +59,5 @@ touch debug_state_update.txt
 touch debug_Gs_again.txt
 make clean
 make 
-./clean_meshfree /opt/grids/quadtree/part/partGrid40K 3
+./clean_meshfree /opt/grids/quadtree/part/partGrid40K 10
 

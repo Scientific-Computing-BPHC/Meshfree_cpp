@@ -52,7 +52,7 @@ void flux_Gxn(double Gxn[4], double nx, double ny, double u1, double u2, double 
 	Gxn[0] = (rho*(ut*A1neg - B1));
 
 	double temp1 = pr_by_rho + ut*ut;
-	double temp2 = temp1*A1neg + ut*B1;
+	double temp2 = temp1*A1neg - ut*B1;
 
 	Gxn[1] = (rho*temp2);
 

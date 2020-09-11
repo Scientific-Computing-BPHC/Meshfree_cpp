@@ -55,7 +55,7 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 ## Roadmap:
 
 - [x] Serial Primal Code
-- [ ] Profile Serial Primal
+- [x] Profile Serial Primal
 - [ ] Optimize and Benchmark Serial Primal
 - [ ] Primal CUDA Parallel Version
 - [ ] Benchmark Primal CUDA Parallel on V100s
