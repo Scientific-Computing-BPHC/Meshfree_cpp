@@ -1,8 +1,3 @@
-// Please repeatedly remind yourself that whatever starts with index x in Julia starts with index x-1 in C++
-// Again, and again remind youself. So be doubly, triply careful with the indexing - especially wth globaldata[conn] -> Point number 46053 is located at 46052
-
-// Learn to use memset to initialize all the points in a single shot
-
 #include<stdio.h>
 #include<iostream>
 #include<math.h>
