@@ -11,7 +11,7 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 * gcc 8.3.0 or higher
 * armadillo 9.900.2
 
-## Usage
+## Usage:
 
 * Configure the parameters through the Config struct in core.hpp
 * run `./batchscript`
