@@ -5,18 +5,15 @@ Scientific Computing @ BITS Pilani - Hyderabad Campus.
 Development of a meshfree solver for inviscid compressible fluid flows in C++. The meshfree solver is based on the Least Squares
 Kinetic Upwind Method (q-LSKUM), developed by Deshpande et. al. 
 
-For access, please contact Dr. N. Anil, BITS Pilani.
-
-This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Asst. Prof., Department of Mathematics, BITS Pilani - Hyderabad Campus. Nischay Ram Mamidi, Kumar Prasun, Srikanth and Rupanshu have developed the Python, Julia, Fortran and Regent versions respectively.
+This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Assistant Professor, Department of Mathematics, BITS Pilani - Hyderabad Campus, and Professor S.M. Deshpande, JNCASR. 
 
 ## Dependencies:
 * gcc 8.3.0 or higher
 * armadillo 9.900.2
 
-## Instructions to run:
+## Usage:
 
-* clone the repo
-* `cd src`
+* Configure the parameters through the Config struct in core.hpp
 * run `./batchscript`
 
 ## Directory Structure: 
@@ -65,4 +62,11 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 - [ ] Benchmark Parallel Adjoint on V100s
 - [ ] Begin 3D Serial Primal 
 
+## Support:
+
+Please contact the author for running the code, and Dr. N. Anil for access to the input grids.
+
+## Author:
+
+Harivallabha Rangarajan, Department of Mathematics and Computer Science, BITS Pilani - Hyderabad. 
 
