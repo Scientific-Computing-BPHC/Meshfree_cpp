@@ -198,17 +198,13 @@ void calculateConnectivity(Point* globaldata, int idx);
 
 void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4]);
 
-void q_variables(Point* globaldata, int numPoints);
-
-void q_var_derivatives(Point* globaldata, int numPoints, double power);
-
-void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4]);
-
-void call_q_variables_cuda(Point* globaldata, int numPoints, double power, int block_size);
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, double tempdq[][2][4], int block_size);
 
 __global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
 
 __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
+
+__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, double* tempdq, dim3 thread_dim);
 
 template <class Type>
 bool isNan(Type var);
