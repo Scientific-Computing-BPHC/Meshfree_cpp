@@ -1,16 +1,20 @@
 VERSION = 0.1
-CC = nvcc -arch compute_61 
+CC = nvcc 
 CPP = g++
 JSON_PATH = /home/hari/Work/build/vcpkg/packages/jsoncpp_x64-linux/include
 LDFLAGS = -lm -larmadillo -lgomp 
 # CPPFLAGS  = -Wall -pg -O2 -std=c++0x -fpermissive -I $(JSON_PATH)
-CFLAGS  = -std=c++11 -Xcompiler -fopenmp 
-CPPFLAGS  = -Wall -pg -O2 -fpermissive -I $(JSON_PATH)
+CUDA_PATH = /home/hari/Work/Common
+CFLAGS  = -std=c++11 -Xcompiler -fopenmp -I $(CUDA_PATH)
+CPPFLAGS  = -Wall -pg -O2 -fpermissive -I $(JSON_PATH) -I $(CUDA_PATH)
 
-
-OBJ = clean_main.o core.o utils.o point.o state_update.o flux_residual.o wall_fluxes.o limiters.o quadrant_fluxes.o split_fluxes.o outer_fluxes.o interior_fluxes.o
+# ## Serial
+# OBJ = clean_main.o core.o utils.o point.o state_update.o flux_residual.o wall_fluxes.o limiters.o quadrant_fluxes.o split_fluxes.o outer_fluxes.o interior_fluxes.o 
 # make: $(OBJ)
 # 	$(CPP) $(CPPFLAGS) -o clean_meshfree $(OBJ) $(LDFLAGS)
+
+# Parallel
+OBJ = clean_main.o utils.o point.o state_update.o flux_residual.o wall_fluxes.o limiters.o quadrant_fluxes.o split_fluxes.o outer_fluxes.o interior_fluxes.o core_cuda.o
 
 make: $(OBJ)
 	$(CC) $(CFLAGS) -o clean_meshfree $(OBJ) $(LDFLAGS)

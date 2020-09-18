@@ -1,14 +1,8 @@
-#include "core.hpp"
+#include "core_cuda.hpp"
 #include "point.hpp"
 #include "state_update.hpp"
 #include "flux_residual.hpp"
 #include "utils.hpp"
-
-#include<cuda_runtime.h>
-#include<stdio.h>
-#include<assert.h>
-#include <helper_functions.h>
-#include <helper_cuda.h>
 
 inline void q_var_derivatives_update(double sig_del_x_sqr, double sig_del_y_sqr, double sig_del_x_del_y, double sig_del_x_del_q[4], double sig_del_y_del_q[4], double dq1_store[4], double dq2_store[2]);
 inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
@@ -194,6 +188,8 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4])
 {
+    int block_size = configData.core.threadsperblock;
+    
     if (iter == 0)
         cout<<"\nStarting FuncDelta"<<endl;
 
@@ -205,15 +201,17 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int rk=0; rk<rks; rk++)
     {
 
-        q_variables(globaldata, numPoints);
+        //q_variables(globaldata, numPoints);
+
+        call_q_variables_cuda(globaldata, numPoints, block_size);
 
         q_var_derivatives(globaldata, numPoints, power);
 
-        // cout<<endl;
-        // for(int index = 0; index<4; index++)
-        // {
-        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[46052].q[index]<<"   ";
-        // }
+        cout<<endl;
+        for(int index = 0; index<4; index++)
+        {
+            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].q[index]<<"   ";
+        }
         // cout<<endl;
         // for(int index = 0; index<4; index++)
         // {
@@ -249,6 +247,66 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         // }
 
     }
+}
+
+__global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim)
+{
+    double q_result[4] = {0};
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+    int idx = bx*thread_dim.x + tx;
+    //printf("\n idx is: %d \n", idx);
+    if(idx < numPoints)
+    {
+        double rho = globaldata[idx].prim[0];
+        double u1 = globaldata[idx].prim[1];
+        double u2 = globaldata[idx].prim[2];
+        double pr = globaldata[idx].prim[3];
+        double beta = 0.5 * (rho/pr);
+
+        double two_times_beta = 2.0 * beta;
+        q_result[0] = log(rho) + log(beta) * 2.5 - (beta * ((u1 * u1) + (u2 * u2)));
+        q_result[1] = (two_times_beta * u1);
+        q_result[2] = (two_times_beta * u2);
+        q_result[3] = -two_times_beta;
+        for(int i=0; i<4; i++)
+        {
+            globaldata[idx].q[i] = q_result[i];
+        }
+    }
+    //__syncthreads();
+}
+
+void call_q_variables_cuda(Point* globaldata, int numPoints, int block_size)
+{
+    dim3 threads(block_size);
+    dim3 grid((numPoints / threads.x +1));
+    cudaStream_t stream;
+
+    //printf("\n Block Size: %d and Grid size: %d \n", threads.x, grid.x);
+
+    unsigned int mem_size_A = sizeof(struct Point) * numPoints;
+    //printf("\n MemSize: %d \n", mem_size_A);
+    Point* globaldata_d;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
+
+    // // Allocate CUDA events that we'll use for timing
+    // cudaEvent_t start, stop;
+    // checkCudaErrors(cudaEventCreate(&start));
+    // checkCudaErrors(cudaEventCreate(&stop));
+
+    // Create and start timer
+    //printf("Computing result using CUDA Kernel...\n");
+
+
+    checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+
+    // copy host memory to device
+    checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
+    q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads.x);
+    cudaDeviceSynchronize();
+    checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
+    checkCudaErrors(cudaFree(globaldata_d));
 }
 
 void q_variables(Point* globaldata, int numPoints)
