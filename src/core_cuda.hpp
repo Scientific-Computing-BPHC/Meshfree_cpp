@@ -204,9 +204,11 @@ void q_var_derivatives(Point* globaldata, int numPoints, double power);
 
 void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4]);
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, int block_size);
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, int block_size);
 
-__global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim);
+__global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
+
+__global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
 
 template <class Type>
 bool isNan(Type var);

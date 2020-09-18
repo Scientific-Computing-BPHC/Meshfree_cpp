@@ -201,17 +201,13 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int rk=0; rk<rks; rk++)
     {
 
-        //q_variables(globaldata, numPoints);
+        call_q_variables_cuda(globaldata, numPoints, power, block_size);
 
-        call_q_variables_cuda(globaldata, numPoints, block_size);
-
-        q_var_derivatives(globaldata, numPoints, power);
-
-        cout<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].q[index]<<"   ";
-        }
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[0].q[index]<<"   ";
+        // }
         // cout<<endl;
         // for(int index = 0; index<4; index++)
         // {
@@ -251,11 +247,11 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
 __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim)
 {
-    double q_result[4] = {0};
     int bx = blockIdx.x;
     int tx = threadIdx.x;
     int idx = bx*thread_dim.x + tx;
-    //printf("\n idx is: %d \n", idx);
+
+    double q_result[4] = {0};
     if(idx < numPoints)
     {
         double rho = globaldata[idx].prim[0];
@@ -274,64 +270,155 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
             globaldata[idx].q[i] = q_result[i];
         }
     }
-    //__syncthreads();
 }
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, int block_size)
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, int block_size)
 {
-    dim3 threads(block_size);
-    dim3 grid((numPoints / threads.x +1));
-    cudaStream_t stream;
-
-    //printf("\n Block Size: %d and Grid size: %d \n", threads.x, grid.x);
-
-    unsigned int mem_size_A = sizeof(struct Point) * numPoints;
-    //printf("\n MemSize: %d \n", mem_size_A);
+    cudaStream_t stream;  
     Point* globaldata_d;
+    unsigned int mem_size_A = sizeof(struct Point) * numPoints;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
-
-    // // Allocate CUDA events that we'll use for timing
-    // cudaEvent_t start, stop;
-    // checkCudaErrors(cudaEventCreate(&start));
-    // checkCudaErrors(cudaEventCreate(&stop));
-
-    // Create and start timer
-    //printf("Computing result using CUDA Kernel...\n");
-
-
     checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
 
-    // copy host memory to device
-    checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
-    q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads.x);
+    // Copy from host to device
+    checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream)); 
+
+    dim3 threads(block_size);
+    dim3 grid((numPoints / threads.x +1));
+    // Make the kernel call
+    q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
     cudaDeviceSynchronize();
+    q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
+    cudaDeviceSynchronize();
+    
+    // Copy from device to host, and free the device memory
     checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaFree(globaldata_d));
 }
 
-void q_variables(Point* globaldata, int numPoints)
+__global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim)
 {
-    double q_result[4] = {0};
-    
-    for(int idx=0; idx<numPoints; idx++)
-    {
-        double rho = globaldata[idx].prim[0];
-        double u1 = globaldata[idx].prim[1];
-        double u2 = globaldata[idx].prim[2];
-        double pr = globaldata[idx].prim[3];
-        double beta = 0.5 * (rho/pr);
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+    int idx = bx*thread_dim.x + tx;
 
-        double two_times_beta = 2.0 * beta;
-        q_result[0] = log(rho) + log(beta) * 2.5 - (beta * ((u1 * u1) + (u2 * u2)));
-        q_result[1] = (two_times_beta * u1);
-        q_result[2] = (two_times_beta * u2);
-        q_result[3] = -two_times_beta;
+    double sig_del_x_del_q[4], sig_del_y_del_q[4], min_q[4], max_q[4];
+
+    if(idx < numPoints)
+    {
+        double x_i = globaldata[idx].x;
+        double y_i = globaldata[idx].y;
+        double sig_del_x_sqr = 0.0;
+        double sig_del_y_sqr = 0.0;
+        double sig_del_x_del_y = 0.0;
+
+        #pragma unroll
         for(int i=0; i<4; i++)
         {
-            globaldata[idx].q[i] = q_result[i];
+            sig_del_x_del_q[i] = 0.0;
+            sig_del_y_del_q[i] = 0.0;
         }
-    }
 
+        #pragma unroll
+        for(int i=0; i<4; i++)
+        {
+            max_q[i] = globaldata[idx].q[i];
+            min_q[i] = globaldata[idx].q[i];
+        }
+
+        #pragma unroll
+        for(int i=0; i<20; i++)
+        {
+            int conn = globaldata[idx].conn[i];
+            if(conn == 0) 
+            {
+                break;
+            }
+
+            conn = conn - 1; // To account for the indexing difference
+
+            double x_k = globaldata[conn].x;
+            double y_k = globaldata[conn].y;
+
+            double delta_x = x_k - x_i;
+            double delta_y = y_k - y_i;
+
+            double dist = hypot(delta_x, delta_y);
+            double weights = pow(dist, power);
+            sig_del_x_sqr += ((delta_x * delta_x) * weights);
+            sig_del_y_sqr += ((delta_y * delta_y) * weights);
+            sig_del_x_del_y += ((delta_x * delta_y) * weights);
+
+            #pragma unroll
+            for(int iter=0; iter<4; iter++)
+            {
+                double intermediate_var = weights * (globaldata[conn].q[iter] - globaldata[idx].q[iter]);
+                sig_del_x_del_q[iter] = sig_del_x_del_q[iter] + (delta_x * intermediate_var);
+                sig_del_y_del_q[iter] = sig_del_y_del_q[iter] + (delta_y * intermediate_var);
+
+            }
+
+            // if(idx == 0)
+            // {
+
+            //     cout<<"Conn: "<<conn<<endl;
+            //     for(int index = 0; index<4; index++)
+            //     {
+            //         cout<<std::fixed<<std::setprecision(17)<<globaldata[conn].q[index]<<"   ";
+            //     }
+            //     cout<<endl;
+            // }
+            
+            #pragma unroll
+            for(int j=0; j<4; j++)
+            {
+                if (max_q[j] < globaldata[conn].q[j])
+                {
+                    max_q[j] = globaldata[conn].q[j];
+                }
+                if(min_q[j] > globaldata[conn].q[j])
+                {
+                    min_q[j] = globaldata[conn].q[j];
+                }
+            }
+        }
+
+
+        #pragma unroll
+        for(int i=0; i<4; i++)
+        {
+            globaldata[idx].max_q[i] = max_q[i];
+            globaldata[idx].min_q[i] = min_q[i];
+        }
+
+        //q_var_derivatives_update(sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, sig_del_x_del_q, sig_del_y_del_q, max_q, min_q);
+
+        double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
+        double one_by_det = 1.0/det;
+
+        // if(idx == 0)
+        // {
+
+        //     cout<<endl;
+        //     for(int index = 0; index<4; index++)
+        //     {
+        //         cout<<std::fixed<<std::setprecision(17)<<sig_del_x_del_q[index]<<"   ";
+        //     }
+        //     cout<<endl;
+        //     for(int index = 0; index<4; index++)
+        //     {
+        //         cout<<std::fixed<<std::setprecision(17)<<sig_del_y_del_q[index]<<"   ";
+        //     }
+
+        // }
+        #pragma unroll
+        for(int iter=0; iter<4; iter++)
+        {
+            globaldata[idx].dq1[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
+            globaldata[idx].dq2[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
+        }
+
+    }
 }
 
 void q_var_derivatives(Point* globaldata, int numPoints, double power)
