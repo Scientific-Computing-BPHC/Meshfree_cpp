@@ -1,6 +1,6 @@
-#include "quadrant_fluxes.hpp"
+#include "quadrant_fluxes_cuda.hpp"
 
-void flux_quad_GxI(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_quad_GxI(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
     double tx = ny;
     double ty = -nx;
@@ -38,7 +38,7 @@ void flux_quad_GxI(double G[4], double nx, double ny, double u1, double u2, doub
     G[3] = rho*A2neg*(temp2 - temp3) - temp4;
 }
 
-void flux_quad_GxII(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_quad_GxII(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;
@@ -76,7 +76,7 @@ void flux_quad_GxII(double G[4], double nx, double ny, double u1, double u2, dou
     G[3] = rho*A2neg*(temp2 + temp3) - temp4;
 }
 
-void flux_quad_GxIII(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_quad_GxIII(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
     double tx = ny;
     double ty = -nx;
@@ -114,7 +114,7 @@ void flux_quad_GxIII(double G[4], double nx, double ny, double u1, double u2, do
     G[3] = rho*A2pos*(temp2 + temp3) + temp4;
 }
 
-void flux_quad_GxIV(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_quad_GxIV(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
     double tx = ny;
     double ty = -nx;

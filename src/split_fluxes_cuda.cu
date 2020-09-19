@@ -1,6 +1,6 @@
-#include "split_fluxes.hpp"
+#include "split_fluxes_cuda.hpp"
 
-void flux_Gxp(double Gxp[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_Gxp(double Gxp[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;
@@ -33,7 +33,7 @@ void flux_Gxp(double Gxp[4], double nx, double ny, double u1, double u2, double 
 
 }
 
-void flux_Gxn(double Gxn[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_Gxn(double Gxn[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;
@@ -66,7 +66,7 @@ void flux_Gxn(double Gxn[4], double nx, double ny, double u1, double u2, double 
 
 }
 
-void flux_Gyn(double Gyn[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_Gyn(double Gyn[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;
@@ -99,7 +99,7 @@ void flux_Gyn(double Gyn[4], double nx, double ny, double u1, double u2, double 
 
 }
 
-void flux_Gyp(double Gyp[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_Gyp(double Gyp[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;
@@ -132,7 +132,7 @@ void flux_Gyp(double Gyp[4], double nx, double ny, double u1, double u2, double 
 
 }
 
-void flux_Gx(double Gx[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_Gx(double Gx[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;
@@ -151,7 +151,7 @@ void flux_Gx(double Gx[4], double nx, double ny, double u1, double u2, double rh
     Gx[3] = (pr + rho_e)*ut;
 }
 
-void flux_Gy(double Gy[4], double nx, double ny, double u1, double u2, double rho, double pr)
+__device__ void flux_Gy(double Gy[4], double nx, double ny, double u1, double u2, double rho, double pr)
 {
 	double tx = ny;
 	double ty = -nx;

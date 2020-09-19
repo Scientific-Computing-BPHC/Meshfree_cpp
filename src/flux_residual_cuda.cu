@@ -1,8 +1,8 @@
 #include "point.hpp"
-#include "flux_residual.hpp"
-#include "wall_fluxes.hpp"
-#include "outer_fluxes.hpp"
-#include "interior_fluxes.hpp"
+#include "flux_residual_cuda.hpp"
+#include "wall_fluxes_cuda.hpp"
+#include "outer_fluxes_cuda.hpp"
+#include "interior_fluxes_cuda.hpp"
 
 template <class Type>
 bool isNan(Type var)
@@ -11,12 +11,15 @@ bool isNan(Type var)
     return false;
 }
 
-void cal_flux_residual(Point* globaldata, int numPoints, Config configData)
+__global__ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, dim3 thread_dim)
 {
+    int bx = blockIdx.x;
+    int threadx = threadIdx.x;
+    int idx = bx*thread_dim.x + threadx;
 
 	double Gxp[4] = {0}, Gxn[4] = {0}, Gyp[4] = {0}, Gyn[4] = {0};
 
-	for(int idx=0; idx<numPoints; idx++)
+	if(idx < numPoints)
 	{
 
 		if (globaldata[idx].flag_1 == 0)
@@ -29,7 +32,7 @@ void cal_flux_residual(Point* globaldata, int numPoints, Config configData)
 	}
 }
 
-void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
+__device__ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
 {
 
 
@@ -50,7 +53,7 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 	}
 }
 
-void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
+__device__ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
 {
 
 	outer_dGx_pos(globaldata, idx, Gxp, configData);
@@ -59,29 +62,7 @@ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], doubl
 
 	double Gtemp[4] = {0};
 
-	// if(idx == 1356)
-	// {
-	//     cout<<endl;
- //        for(int index = 0; index<4; index++)
- //        {
- //            cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
- //        }
- //        cout<<endl;
- //        for(int index = 0; index<4; index++)
- //        {
- //            cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
- //        }
- //        cout<<endl;
- //        for(int index = 0; index<4; index++)
- //        {
- //            cout<<std::fixed<<std::setprecision(17)<<Gyp[index]<<"   ";
- //        }
- //        // cout<<endl;
- //        // for(int index = 0; index<4; index++)
- //        // {
- //        //     cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
- //        // }
- //    }
+
 
 	for(int i=0; i<4; i++)
 		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i]);
@@ -91,7 +72,7 @@ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], doubl
 
 }
 
-void interiorindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
+__device__ void interiorindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
 {
 	interior_dGx_pos(globaldata, idx, Gxp, configData);
 	interior_dGx_neg(globaldata, idx, Gxn, configData);

@@ -217,7 +217,7 @@ void calculateConnectivity(Point* globaldata, int idx);
 
 void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq);
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size);
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size, Config configData);
 
 __global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
 

@@ -1,7 +1,7 @@
 #include "core_cuda.hpp"
 #include "point.hpp"
 #include "state_update.hpp"
-#include "flux_residual.hpp"
+#include "flux_residual_cuda.hpp"
 #include "utils.hpp"
 
 __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
@@ -199,9 +199,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int rk=0; rk<rks; rk++)
     {
 
-        call_q_variables_cuda(globaldata, numPoints, power, tempdq, block_size);
-
-        cal_flux_residual(globaldata, numPoints, configData);
+        call_q_variables_cuda(globaldata, numPoints, power, tempdq, block_size, configData);
 
         state_update(globaldata, numPoints, configData, iter, res_old, rk, rks);
     }
@@ -234,7 +232,7 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     }
 }
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size)
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size, Config configData)
 {
     cudaStream_t stream;  
     Point* globaldata_d;
@@ -253,17 +251,17 @@ void call_q_variables_cuda(Point* globaldata, int numPoints, double power, Tempq
     dim3 grid((numPoints / threads.x +1));
     // Make the kernel call
     q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
-    //cudaDeviceSynchronize();
     q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
-    //cudaDeviceSynchronize();
 
     for(int inner_iters=0; inner_iters<3; inner_iters++)
     {
         q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads);
         q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
-        //cudaDeviceSynchronize();
     }
+
+    cal_flux_residual<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
     cudaDeviceSynchronize();
+
     // Copy from device to host, and free the device memory
     checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));

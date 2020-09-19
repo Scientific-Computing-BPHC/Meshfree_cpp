@@ -1,9 +1,9 @@
-#include "outer_fluxes.hpp"
-#include "limiters.hpp"
-#include "quadrant_fluxes.hpp"
-#include "split_fluxes.hpp"
+#include "outer_fluxes_cuda.hpp"
+#include "limiters_cuda.hpp"
+#include "quadrant_fluxes_cuda.hpp"
+#include "split_fluxes_cuda.hpp"
 
-void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
+__device__ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 {
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
@@ -39,8 +39,8 @@ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 		conn = conn - 1;
 
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
-		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
-
+		connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, delta_x, delta_y, delta_s_weights, delta_n_weights);
+		
 		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
@@ -61,7 +61,7 @@ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 	
 }
 
-void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
+__device__ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -97,7 +97,7 @@ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 		conn = conn - 1;
 
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
-		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
+		connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, delta_x, delta_y, delta_s_weights, delta_n_weights);
 
 		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
 
@@ -119,7 +119,7 @@ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 
 }
 
-void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData)
+__device__ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -155,8 +155,8 @@ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData)
 		conn = conn - 1;
 
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
-		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
-
+		connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, delta_x, delta_y, delta_s_weights, delta_n_weights);
+		
 		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
