@@ -14,7 +14,7 @@ CPPFLAGS  = -Wall -pg -O2 -fpermissive -I $(JSON_PATH) -I $(CUDA_PATH)
 # 	$(CPP) $(CPPFLAGS) -o clean_meshfree $(OBJ) $(LDFLAGS)
 
 # Parallel
-OBJ = clean_main.o utils.o point.o state_update.o flux_residual_cuda.o wall_fluxes_cuda.o limiters_cuda.o quadrant_fluxes_cuda.o split_fluxes_cuda.o outer_fluxes_cuda.o interior_fluxes_cuda.o core_cuda.o
+OBJ = clean_main.o utils.o point.o state_update_cuda.o flux_residual_cuda.o wall_fluxes_cuda.o limiters_cuda.o quadrant_fluxes_cuda.o split_fluxes_cuda.o outer_fluxes_cuda.o interior_fluxes_cuda.o core_cuda.o
 
 make: $(OBJ)
 	$(CC) $(CFLAGS) -o clean_meshfree $(OBJ) $(LDFLAGS)
