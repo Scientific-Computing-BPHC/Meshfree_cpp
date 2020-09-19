@@ -29,7 +29,7 @@ typedef std::vector<long double> vec_ldoub;
 bool debug_mode = true;
 
 void meshfree_solver(char* file_name, int num_iters);
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4], int max_iters);
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters);
 void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters);
 
 int main(int argc, char **argv)
@@ -370,7 +370,7 @@ void meshfree_solver(char* file_name, int max_iters)
 }	
 
 
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4], int max_iters)
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters)
 {
 	for (int i=0; i<max_iters; i++)
 	{
@@ -386,7 +386,10 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	res_old[0] = 0.0;
 
 	cout<<"\nStarting main function \n";
-	double tempdq[numPoints][2][4] = {0.0};
+	TempqDers* tempdq = new TempqDers[numPoints];
+	
+	for (int i=0; i<numPoints; i++)
+		tempdq[i].setTempdq();
 
 	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters);
 }

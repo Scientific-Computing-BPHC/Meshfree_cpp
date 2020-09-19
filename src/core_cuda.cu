@@ -5,7 +5,6 @@
 #include "utils.hpp"
 
 __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
-__device__ inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int idx, double* tempdq);
 
 template <class Type>
 bool isNan(Type var)
@@ -185,7 +184,7 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 }
 
-void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4])
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq)
 {
     int block_size = configData.core.threadsperblock;
     
@@ -235,39 +234,40 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     }
 }
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, double power, double tempdq[][2][4], int block_size)
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size)
 {
     cudaStream_t stream;  
     Point* globaldata_d;
     unsigned int mem_size_A = sizeof(struct Point) * numPoints;
-    double* tempdq_d;
-    unsigned int mem_size_B = sizeof(double) * numPoints * 2 * 4;
+    TempqDers* tempdq_d;
+    unsigned int mem_size_B = sizeof(struct TempqDers) * numPoints;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&tempdq_d), mem_size_B)); 
     checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
 
     // Copy from host to device
-    checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream)); 
-    checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream)); 
+    checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
+    checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
 
     dim3 threads(block_size);
     dim3 grid((numPoints / threads.x +1));
     // Make the kernel call
     q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
     for(int inner_iters=0; inner_iters<3; inner_iters++)
     {
         q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads);
-        cudaDeviceSynchronize();
+        q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
+        //cudaDeviceSynchronize();
     }
-    
+    cudaDeviceSynchronize();
     // Copy from device to host, and free the device memory
     checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
-    //checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyHostToDevice, stream)); 
-    checkCudaErrors(cudaFree(globaldata_d));
+    checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
+    checkCudaErrors(cudaFree(globaldata_d)); 
     checkCudaErrors(cudaFree(tempdq_d));
 }
 
@@ -367,7 +367,7 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
     }
 }
 
-__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, double* tempdq, dim3 thread_dim)
+__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, dim3 thread_dim)
 {   
     int bx = blockIdx.x;
     int tx = threadIdx.x;
@@ -420,24 +420,11 @@ __global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoint
         for(int iter =0; iter<4; iter++)
         {
             
-            tempdq[idx*2*4 + 0*4 + iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
-            tempdq[idx*2*4 + 1*4 + iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
+            tempdq[idx].dq1[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
+            tempdq[idx].dq2[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
         }
     }
 
-
-
-    if(idx < numPoints)
-    {
-        q_var_derivatives_update_innerloop(qi_tilde, qk_tilde, idx, tempdq);
-        
-        #pragma unroll 
-        for(int j=0; j<4; j++)
-        {    
-            globaldata[idx].dq1[j] = qi_tilde[j];
-            globaldata[idx].dq2[j] = qk_tilde[j];
-        }
-    }
 }
 
 __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4])
@@ -456,13 +443,17 @@ __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldat
     }
 }
 
-__device__ inline void q_var_derivatives_update_innerloop(double dq1[4], double dq2[4], int idx, double* tempdq)
+__global__ void q_var_derivatives_update_innerloop_cuda(Point* globaldata, TempqDers* tempdq, dim3 thread_dim)
 {
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+    int idx = bx*thread_dim.x + tx;
+    
     #pragma unroll 
     for(int iter=0; iter<4; iter++)
     {
-        dq1[iter] = tempdq[idx*2*4 + 0*4 + iter];
-        dq2[iter] = tempdq[idx*2*4 + 1*4 + iter];
+        globaldata[idx].dq1[iter] = tempdq[idx].dq1[iter];
+        globaldata[idx].dq2[iter] = tempdq[idx].dq2[iter];
 
     }
 
