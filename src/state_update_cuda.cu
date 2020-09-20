@@ -33,7 +33,7 @@ void func_delta(Point* globaldata, int numPoints, double cfl)
 	}
 }
 
-__global__ void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks, double sig_res_sqr[1], dim3 thread_dim)
+__global__ void state_update_cuda(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks, double* res_sqr, dim3 thread_dim)
 {
     int bx = blockIdx.x;
     int threadx = threadIdx.x;
@@ -59,7 +59,7 @@ __global__ void state_update(Point* globaldata, int numPoints, Config configData
 			{
 				U[i] = 0.0;
             }
-			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
+			state_update_wall(globaldata, idx, max_res, res_sqr, U, Uold, rk, euler);
 		}
 		else if(globaldata[idx].flag_1 == 2)
 		{
@@ -67,7 +67,7 @@ __global__ void state_update(Point* globaldata, int numPoints, Config configData
 			{
 				U[i] = 0.0;
             }
-			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk, euler);
+			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, res_sqr, U, Uold, rk, euler);
 		}
 		else if(globaldata[idx].flag_1 == 1)
 		{
@@ -75,12 +75,12 @@ __global__ void state_update(Point* globaldata, int numPoints, Config configData
 			{
 				U[i] = 0.0;
             }
-			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
+			state_update_interior(globaldata, idx, max_res, res_sqr, U, Uold, rk, euler);
 		}
-	}
+    }
 }
 
-__device__ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
+__device__ void state_update_wall(Point* globaldata, int idx, double max_res, double* res_sqr, double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -106,9 +106,8 @@ __device__ void state_update_wall(Point* globaldata, int idx, double max_res, do
     double U3_rot = U[2];
     U[1] = U2_rot*ny + U3_rot*nx;
     U[2] = U3_rot*ny - U2_rot*nx;
-    double res_sqr = (U[0] - temp)*(U[0] - temp);
+    res_sqr[idx] = (U[0] - temp)*(U[0] - temp);
 
-    atomicAdd(sig_res_sqr[0], res_sqr);
     Uold[0] = U[0];
     temp = 1.0 / U[0];
     Uold[1] = U[1]*temp;
@@ -118,9 +117,10 @@ __device__ void state_update_wall(Point* globaldata, int idx, double max_res, do
     {
     	globaldata[idx].prim[i] = Uold[i];
     }
+
 }
 
-__device__ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
+__device__ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double* res_sqr, double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -141,9 +141,8 @@ __device__ void state_update_outer(Point* globaldata, int idx, double Mach, doub
     double U3_rot = U[2];
     U[1] = U2_rot*ny + U3_rot*nx;
     U[2] = U3_rot*ny - U2_rot*nx;
-    double res_sqr = (U[0] - temp)*(U[0] - temp);
+    res_sqr[idx] = (U[0] - temp)*(U[0] - temp);
 
-    atomicAdd(sig_res_sqr[0], res_sqr);
     Uold[0] = U[0];
     temp = 1.0 / U[0];
     Uold[1] = U[1]*temp;
@@ -153,9 +152,10 @@ __device__ void state_update_outer(Point* globaldata, int idx, double Mach, doub
     {
     	globaldata[idx].prim[i] = Uold[i];
     }
+
 }
 
-__device__ void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
+__device__ void state_update_interior(Point* globaldata, int idx, double max_res, double* res_sqr, double U[4], double Uold[4], int rk, int euler)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
@@ -176,9 +176,8 @@ __device__ void state_update_interior(Point* globaldata, int idx, double max_res
     double U3_rot = U[2];
     U[1] = U2_rot*ny + U3_rot*nx;
     U[2] = U3_rot*ny - U2_rot*nx;
-    double res_sqr = (U[0] - temp)*(U[0] - temp);
+    res_sqr[idx] = (U[0] - temp)*(U[0] - temp);
 
-    atomicAdd(sig_res_sqr[0], res_sqr);
     Uold[0] = U[0];
     temp = 1.0 / U[0];
     Uold[1] = U[1]*temp;
@@ -188,6 +187,7 @@ __device__ void state_update_interior(Point* globaldata, int idx, double max_res
     {
     	globaldata[idx].prim[i] = Uold[i];
     }
+
 }
 
 __device__ inline void primitive_to_conserved(double globaldata_prim[4], double nx, double ny, double U[4])

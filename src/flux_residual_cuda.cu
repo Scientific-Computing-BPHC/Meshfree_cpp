@@ -11,7 +11,7 @@ bool isNan(Type var)
     return false;
 }
 
-__global__ void cal_flux_residual(Point* globaldata, int numPoints, Config configData, dim3 thread_dim)
+__global__ void cal_flux_residual_cuda(Point* globaldata, int numPoints, Config configData, dim3 thread_dim)
 {
     int bx = blockIdx.x;
     int threadx = threadIdx.x;

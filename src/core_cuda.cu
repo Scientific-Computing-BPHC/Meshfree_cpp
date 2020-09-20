@@ -1,6 +1,7 @@
 #include "core_cuda.hpp"
 #include "point.hpp"
-#include "state_update.hpp"
+#include "state_update_cuda.hpp"
+//#include "state_update.hpp"
 #include "flux_residual_cuda.hpp"
 #include "utils.hpp"
 
@@ -199,9 +200,8 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int rk=0; rk<rks; rk++)
     {
 
-        call_q_variables_cuda(globaldata, numPoints, power, tempdq, block_size, configData);
-
-        state_update(globaldata, numPoints, configData, iter, res_old, rk, rks);
+        call_q_variables_cuda(globaldata, numPoints, power, tempdq, block_size, configData, res_old, iter, rk, rks);
+        //state_update(globaldata, numPoints, configData, iter, res_old, rk, rks);
     }
 }
 
@@ -232,20 +232,34 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     }
 }
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size, Config configData)
+void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size, Config configData, double res_old[1], int iter, int rk, int rks)
 {
+    // When you make this a device function, gotta replace out with print
+    
     cudaStream_t stream;  
     Point* globaldata_d;
     unsigned int mem_size_A = sizeof(struct Point) * numPoints;
     TempqDers* tempdq_d;
     unsigned int mem_size_B = sizeof(struct TempqDers) * numPoints;
+    double* res_sqr_d, *res_old_d;
+    unsigned int mem_size_C = sizeof(double);
+    unsigned int mem_size_D = sizeof(double) * numPoints;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&tempdq_d), mem_size_B)); 
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_old_d), mem_size_C));
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_sqr_d), mem_size_D));
     checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+
+    // Gotta create and set sig_res_sqr to 0 everytime this function is called; Be careful to not address host if this becomes a device function and vice versa
+    double* res_sqr = new double[numPoints];
+    // for(int i=0; i<numPoints; i++)
+    //     res_sqr[i] = 0.0;
 
     // Copy from host to device
     checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
     checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
+    checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
+    checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
 
     dim3 threads(block_size);
     dim3 grid((numPoints / threads.x +1));
@@ -259,14 +273,38 @@ void call_q_variables_cuda(Point* globaldata, int numPoints, double power, Tempq
         q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
     }
 
-    cal_flux_residual<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
+    cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
+    state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);
     cudaDeviceSynchronize();
+    checkCudaErrors(cudaMemcpyAsync(res_old, res_old_d, mem_size_C, cudaMemcpyDeviceToHost, stream));
+    checkCudaErrors(cudaMemcpyAsync(res_sqr, res_sqr_d, mem_size_D, cudaMemcpyDeviceToHost, stream));
+
+    double sig_res_sqr = 0.0;
+    for(int i=0; i<numPoints; i++)
+        sig_res_sqr+=res_sqr[i];
+
+    double res_new = sqrt(sig_res_sqr)/numPoints;
+    //cout<<"\nSig Res Sqr: "<<sig_res_sqr<<endl;
+	double residue = 0.0;
+
+	if(iter<=1)   
+	{
+		res_old[0] = res_new;
+		residue = 0.0;
+	}
+	else
+		residue = log10(res_new/res_old[0]);
+
+	if(rk == rks-1)
+		cout<<std::fixed<<std::setprecision(17)<<"\nRand Residue: "<<iter+1<<" "<<residue<<endl;
 
     // Copy from device to host, and free the device memory
     checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaFree(globaldata_d)); 
     checkCudaErrors(cudaFree(tempdq_d));
+    checkCudaErrors(cudaFree(res_old_d));
+    checkCudaErrors(cudaFree(res_sqr_d));
 }
 
 __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim)
