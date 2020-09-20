@@ -16,7 +16,7 @@
 #include<sstream>
 #include<tuple>
 
-#include "core.hpp"
+#include "core_cuda.hpp"
 
 #define ARMA_DONT_PRINT_ERRORS
 using namespace arma;
