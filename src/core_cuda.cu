@@ -185,9 +185,12 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 }
 
-void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq)
+void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
 {
     int block_size = configData.core.threadsperblock;
+
+    dim3 threads(block_size);
+    dim3 grid((numPoints / threads.x +1));
     
     if (iter == 0)
         cout<<"\nStarting FuncDelta"<<endl;
@@ -195,13 +198,12 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     int rks = configData.core.rks;
     double cfl = configData.core.cfl;
     double power = configData.core.power;
-    func_delta(globaldata, numPoints, cfl);
+    call_func_delta_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, cfl, threads);
+    cudaDeviceSynchronize();
 
     for(int rk=0; rk<rks; rk++)
     {
-
-        call_q_variables_cuda(globaldata, numPoints, power, tempdq, block_size, configData, res_old, iter, rk, rks);
-        //state_update(globaldata, numPoints, configData, iter, res_old, rk, rks);
+        call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, grid, stream, res_old, res_sqr, mem_size_C, mem_size_D);
     }
 }
 
@@ -232,38 +234,10 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     }
 }
 
-void call_q_variables_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int block_size, Config configData, double res_old[1], int iter, int rk, int rks)
+void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
 {
-    // When you make this a device function, gotta replace out with print
-    
-    cudaStream_t stream;  
-    Point* globaldata_d;
-    unsigned int mem_size_A = sizeof(struct Point) * numPoints;
-    TempqDers* tempdq_d;
-    unsigned int mem_size_B = sizeof(struct TempqDers) * numPoints;
-    double* res_sqr_d, *res_old_d;
-    unsigned int mem_size_C = sizeof(double);
-    unsigned int mem_size_D = sizeof(double) * numPoints;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&tempdq_d), mem_size_B)); 
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_old_d), mem_size_C));
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_sqr_d), mem_size_D));
-    checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
 
-    // Gotta create and set sig_res_sqr to 0 everytime this function is called; Be careful to not address host if this becomes a device function and vice versa
-    double* res_sqr = new double[numPoints];
-    // for(int i=0; i<numPoints; i++)
-    //     res_sqr[i] = 0.0;
-
-    // Copy from host to device
-    checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
-    checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
-    checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
-    checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
-
-    dim3 threads(block_size);
-    dim3 grid((numPoints / threads.x +1));
-    // Make the kernel call
+    // Make the kernel calls
     q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
     q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
 
@@ -274,6 +248,8 @@ void call_q_variables_cuda(Point* globaldata, int numPoints, double power, Tempq
     }
 
     cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
+    checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
+	checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
     state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);
     cudaDeviceSynchronize();
     checkCudaErrors(cudaMemcpyAsync(res_old, res_old_d, mem_size_C, cudaMemcpyDeviceToHost, stream));
@@ -284,7 +260,6 @@ void call_q_variables_cuda(Point* globaldata, int numPoints, double power, Tempq
         sig_res_sqr+=res_sqr[i];
 
     double res_new = sqrt(sig_res_sqr)/numPoints;
-    //cout<<"\nSig Res Sqr: "<<sig_res_sqr<<endl;
 	double residue = 0.0;
 
 	if(iter<=1)   
@@ -298,13 +273,6 @@ void call_q_variables_cuda(Point* globaldata, int numPoints, double power, Tempq
 	if(rk == rks-1)
 		cout<<std::fixed<<std::setprecision(17)<<"\nRand Residue: "<<iter+1<<" "<<residue<<endl;
 
-    // Copy from device to host, and free the device memory
-    checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
-    checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
-    checkCudaErrors(cudaFree(globaldata_d)); 
-    checkCudaErrors(cudaFree(tempdq_d));
-    checkCudaErrors(cudaFree(res_old_d));
-    checkCudaErrors(cudaFree(res_sqr_d));
 }
 
 __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim)

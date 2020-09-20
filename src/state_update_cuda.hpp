@@ -4,7 +4,7 @@
 #include "point.hpp"
 #include "cmath"
 
-void func_delta(Point* globaldata, int numPoints, double cfl);
+__global__ void call_func_delta_cuda(Point* globaldata, int numPoints, double cfl, dim3 thread_dim);
 __global__ void state_update_cuda(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks, double* res_sqr, dim3 thread_dim);
 __device__ void state_update_wall(Point* globaldata, int idx, double max_res, double* res_sqr, double U[4], double Uold[4], int rk, int euler);
 __device__ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double* res_sqr, double U[4], double Uold[4], int rk, int euler);

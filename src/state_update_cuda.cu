@@ -3,9 +3,13 @@
 __device__ inline void primitive_to_conserved(double globaldata_prim[4], double nx, double ny, double U[4]);
 __device__ inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double ny, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double Ubar[4]);
 
-void func_delta(Point* globaldata, int numPoints, double cfl)
+__global__ void call_func_delta_cuda(Point* globaldata, int numPoints, double cfl, dim3 thread_dim)
 {
-	for(int idx=0; idx<numPoints; idx++)
+    int bx = blockIdx.x;
+    int tx = threadIdx.x;
+    int idx = bx*thread_dim.x + tx;
+    
+    if(idx < numPoints)
 	{
 		double min_delt = 1.0;
 		for(int i=0; i<20; i++)

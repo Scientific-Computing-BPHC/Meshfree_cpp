@@ -17,6 +17,7 @@ cd src
 make clean
 make 
 ./clean_meshfree /opt/grids/quadtree/part/partGrid40K 10
+#nvprof -s -o results.nvprof ./clean_meshfree /opt/grids/quadtree/part/partGrid40K 1000
 
 
 
