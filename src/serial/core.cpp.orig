@@ -203,11 +203,11 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         q_var_derivatives(globaldata, numPoints, power);
 
-        cout<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<globaldata[0].q[index]<<"   ";
-        }
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<globaldata[46052].q[index]<<"   ";
+        // }
         // cout<<endl;
         // for(int index = 0; index<4; index++)
         // {
