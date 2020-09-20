@@ -53,7 +53,7 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 
 - [x] Serial Primal Code
 - [x] Profile Serial Primal
-- [ ] Primal CUDA Parallel Version (in progress)
+- [X] Primal CUDA Parallel Version
 - [ ] Serial Adjoint Code with CoDiPack
 - [ ] Optimize and Benchmark Serial Primal once again
 - [ ] CUDAfy CoDiPack based Adjoint Solver
