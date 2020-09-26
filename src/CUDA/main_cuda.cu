@@ -12,6 +12,7 @@
 #include<regex>
 #include<sstream>
 #include<tuple>
+#include <chrono>
 
 #include "utils.hpp"
 #include "core_cuda.hpp"
@@ -73,7 +74,8 @@ void meshfree_solver(char* file_name, int max_iters)
 		num >> numPoints;	
 	}
 
-	std::string new_file[numPoints], temp;
+	std::string temp;
+	std::string* new_file = new std::string[numPoints];
 	if(datafile.is_open())
 	{
 		for(int i=0; i<numPoints; i++)
@@ -93,17 +95,10 @@ void meshfree_solver(char* file_name, int max_iters)
 	{ 
     	std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
     	result.push_back(temp);
-    }
-#if 0
-
-    for(int j=0; j<numPoints; j++)
-    {
-		for (int i=0; i<result[j].size(); i++)
-			cout<<"Result: "<<j<<" " <<i<<" "<<result[j][i]<<endl;
-
 	}
 	
-#endif
+	// Free up the space taken by new_file
+	delete[] new_file;
 
 	std::vector<vec_doub> result_doub;
 	for(int j=0; j<numPoints; j++)
@@ -115,18 +110,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	}
 
-
-#if 0
-	
-	checkFileRead(result_doub, numPoints);
-
-	for(int j=0; j<20; j++)
-    {
-		for (int i=0; i<result_doub[j].size(); i++)
-			cout<<std::fixed<<std::setprecision(20)<<"Result Doub: "<<j<<" " <<i<<" "<<result_doub[j][i]<<endl;
-
-	}
-#endif
+	std::vector<vec_str>().swap(result); // Free up the space taken up by result
 
 	Point* globaldata = new Point[numPoints];
 	double res_old[1] = {0.0};
@@ -276,9 +260,11 @@ void meshfree_solver(char* file_name, int max_iters)
 	}
 
 	cout<<"\n-----End Read-----\n";
-
+	if(configData.core.restart != 1) std::vector<vec_doub>().swap(result_doub);
+	
 	if(configData.core.restart == 1)
     {
+		// Check if any of the memory deallocations with delete[] new_file, or std::vector<vec_doub>().swap(result_doub) etc. are causing issues for the restart version
         char* file_name = "/home/hari/Work/Meshfree_cpp/restart.dat";
         std::fstream datafile(file_name, ios::in);
         std::string temp;
@@ -360,7 +346,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters)
 {
-
+	auto begin = std::chrono::high_resolution_clock::now();
 	cudaStream_t stream;  
     Point* globaldata_d;
     unsigned int mem_size_A = sizeof(struct Point) * numPoints;
@@ -386,7 +372,9 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	{
 		fpi_solver(i, globaldata_d, configData, res_old_d, res_sqr_d, numPoints, tempdq_d, stream, res_old, res_sqr, mem_size_C, mem_size_D);
 	}
-
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+	printf("Time measured: %.5f seconds.\n", elapsed.count() * 1e-9);
 	// Copy from device to host, and free the device memory
 	checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
