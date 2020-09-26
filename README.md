@@ -10,42 +10,43 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 ## Dependencies:
 * gcc 8.3.0 or higher
 * armadillo 9.900.2
+* CUDA 11
 
 ## Usage:
 
-* Configure the parameters through the Config struct in core.hpp
-* run `./batchscript`
+* Configure the parameters through the Config struct in core.hpp or cuda_core.hpp
+* chmod +x batchscript.sh (within src/serial or src/CUDA)
+* run `./batchscript` 
 
 ## Directory Structure: 
 ```
 .
 +-- Meshfree_cpp
 |   +-- src
-|      +-- clean_main.cpp
-|      +-- clean_main.hpp
-|      +-- core.cpp
-|      +-- core.hpp
-|      +-- utils.cpp
-|      +-- utils.hpp
-|      +-- split_fluxes.cpp
-|      +-- split_fluxes.hpp
-|      +-- quadrant_fluxes.cpp
-|      +-- quadrant_fluxes.hpp
-|      +-- state_update.cpp
-|      +-- state_update.hpp
-|      +-- flux_residual.cpp
-|      +-- flux_residual.hpp
-|      +-- limiters.cpp
-|      +-- limiters.hpp
-|      +-- wall_fluxes.cpp
-|      +-- wall_fluxes.hpp
-|      +-- point.cpp
-|      +-- point.hpp
-|      +-- file.cpp
-|      +-- file.hpp
-|      +-- checkFileRead.txt
-|      +-- Makefile   
-|   +-- batchscript
+|       +-- serial
+|           +-- clean_main.cpp
+|           +-- clean_main.hpp
+|           +-- core.cpp
+|           +-- core.hpp
+|           +-- utils.cpp
+|           +-- utils.hpp
+|           +-- split_fluxes.cpp
+|           +-- split_fluxes.hpp
+|           +-- quadrant_fluxes.cpp
+|           +-- quadrant_fluxes.hpp
+|           +-- state_update.cpp
+|           +-- state_update.hpp
+|           +-- flux_residual.cpp
+|           +-- flux_residual.hpp
+|           +-- limiters.cpp
+|           +-- limiters.hpp
+|           +-- wall_fluxes.cpp
+|           +-- wall_fluxes.hpp
+|           +-- point.cpp
+|           +-- point.hpp
+|           +-- Makefile   
+|           +-- batchscript
+|       +-- CUDA
 |   +-- README.md
 |   +-- LICENSE
 ```
