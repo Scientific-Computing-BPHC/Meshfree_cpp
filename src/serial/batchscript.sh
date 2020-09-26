@@ -15,5 +15,5 @@
 echo "Patience"
 make clean
 make 
-./clean_meshfree /opt/grids/quadtree/part/partGrid800K 1000
+./clean_meshfree /opt/grids/quadtree/part/partGrid40K 10
 
