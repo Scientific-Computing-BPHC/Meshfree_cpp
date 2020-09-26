@@ -241,7 +241,7 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
     q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
     q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
 
-    for(int inner_iters=0; inner_iters<3; inner_iters++)
+    for(int inner_iters=0; inner_iters<2; inner_iters++) // Basically, three inner iters
     {
         q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads);
         q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
@@ -271,7 +271,7 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
 		residue = log10(res_new/res_old[0]);
 
 	if(rk == rks-1)
-		cout<<std::fixed<<std::setprecision(17)<<"\nRand Residue: "<<iter+1<<" "<<residue<<endl;
+		cout<<std::fixed<<std::setprecision(17)<<"\n Residue: "<<iter+1<<" "<<residue<<endl;
 
 }
 
