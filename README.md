@@ -45,8 +45,30 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 |           +-- point.cpp
 |           +-- point.hpp
 |           +-- Makefile   
-|           +-- batchscript
+|           +-- batchscript.sh
 |       +-- CUDA
+|           +-- main_cuda.cu
+|           +-- main_cuda.hpp
+|           +-- core_cuda.cu
+|           +-- core_cuda.hpp
+|           +-- utils.cpp
+|           +-- utils.hpp
+|           +-- split_fluxes_cuda.cu
+|           +-- split_fluxes_cuda.hpp
+|           +-- quadrant_fluxes_cuda.cu
+|           +-- quadrant_fluxes_cuda.hpp
+|           +-- state_update_cuda.cu
+|           +-- state_update_cuda.hpp
+|           +-- flux_residual_cuda.cu
+|           +-- flux_residual_cuda.hpp
+|           +-- limiters_cuda.cu
+|           +-- limiters_cuda.hpp
+|           +-- wall_fluxes.cu
+|           +-- wall_fluxes.hpp
+|           +-- point.cpp
+|           +-- point.hpp
+|           +-- Makefile   
+|           +-- batchscript.sh
 |   +-- README.md
 |   +-- LICENSE
 ```
@@ -54,7 +76,11 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 
 - [x] Serial Primal Code
 - [x] Profile Serial Primal
-- [X] Primal CUDA Parallel Version
+- [X] Primal CUDA Parallel Version v1 
+- [ ] Primal CUDA Parallel Version v2 
+    - [X] Reductions
+    - [ ] Shared Memory
+    - [ ] CUDA Graphs
 - [ ] Serial Adjoint Code with CoDiPack
 - [ ] Optimize and Benchmark Serial Primal once again
 - [ ] CUDAfy CoDiPack based Adjoint Solver
