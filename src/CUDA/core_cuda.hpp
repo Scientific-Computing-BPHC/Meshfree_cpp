@@ -150,7 +150,7 @@ struct Config
 		core.shapes = 1.0;
 		core.rho_inf = 1.0;
 		core.pr_inf = 0.7142857142857142;
-		core.threadsperblock = 32;
+		core.threadsperblock = 128;
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
 		core.tscheme = "ssprk43";

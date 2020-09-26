@@ -374,7 +374,7 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-	printf("Time measured: %.5f seconds.\n", elapsed.count() * 1e-9);
+	printf("\nTime measured: %.5f seconds.\n", elapsed.count() * 1e-9);
 	// Copy from device to host, and free the device memory
 	checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
