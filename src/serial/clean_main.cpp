@@ -12,6 +12,7 @@
 #include<regex>
 #include<sstream>
 #include<tuple>
+#include <chrono>
 
 #include "utils.hpp"
 #include "core.hpp"
@@ -73,7 +74,8 @@ void meshfree_solver(char* file_name, int max_iters)
 		num >> numPoints;	
 	}
 
-	std::string new_file[numPoints], temp;
+	std::string temp;
+	std::string* new_file = new std::string[numPoints];
 	if(datafile.is_open())
 	{
 		for(int i=0; i<numPoints; i++)
@@ -94,6 +96,10 @@ void meshfree_solver(char* file_name, int max_iters)
     	std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
     	result.push_back(temp);
     }
+	// Free up the space taken by new_file
+	delete[] new_file;
+
+
 #if 0
 
     for(int j=0; j<numPoints; j++)
@@ -114,6 +120,8 @@ void meshfree_solver(char* file_name, int max_iters)
 		result_doub.push_back(temp);
 
 	}
+
+	std::vector<vec_str>().swap(result); // Free up the space taken up by result
 
 
 #if 0
@@ -276,6 +284,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	}
 
 	cout<<"\n-----End Read-----\n";
+	if(configData.core.restart != 1) std::vector<vec_doub>().swap(result_doub);
 
 	if(configData.core.restart == 1)
     {
@@ -326,7 +335,7 @@ void meshfree_solver(char* file_name, int max_iters)
         }
 
 
-        checkFileRead(result_doub, numPoints);
+        //checkFileRead(result_doub, numPoints);
         // for(int j=0; j<20; j++)
         // {
         //     for (int i=0; i<result_doub[j].size(); i++)
@@ -370,13 +379,19 @@ void meshfree_solver(char* file_name, int max_iters)
 }	
 
 
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4], int max_iters)
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters)
 {
+	auto begin = std::chrono::high_resolution_clock::now();
+	
 	for (int i=0; i<max_iters; i++)
 	{
 		//debug_main_store(main_store);
 		fpi_solver(i, globaldata, configData, res_old, numPoints, tempdq);
 	}
+
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+	printf("Time measured: %.5f seconds.\n", elapsed.count() * 1e-9);
 }
 
 
@@ -386,7 +401,11 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	res_old[0] = 0.0;
 
 	cout<<"\nStarting main function \n";
-	double tempdq[numPoints][2][4] = {0.0};
+	TempqDers* tempdq = new TempqDers[numPoints];
+	cout<<"\n no seg fault till here \n";
+
+	for (int i=0; i<numPoints; i++)
+		tempdq[i].setTempdq();
 
 	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters);
 }

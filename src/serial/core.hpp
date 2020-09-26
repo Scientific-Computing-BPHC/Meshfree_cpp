@@ -26,6 +26,25 @@ typedef std::vector<double> vec_doub;
 typedef std::vector<long double> vec_ldoub;
 typedef std::tuple <double, double> xy_tuple;
 
+struct TempqDers
+{
+	double dq1[4];
+	double dq2[4];
+
+	TempqDers()
+    {
+
+    }
+    void setTempdq()
+	{
+		for(int i=0; i<4; i++)
+		{
+			dq1[i] = 0.0;
+			dq2[i] = 0.0;
+		}
+	}
+};
+
 struct Point
 {
 	int localID;
@@ -190,13 +209,13 @@ xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
 
 void calculateConnectivity(Point* globaldata, int idx);
 
-void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, double tempdq[][2][4]);
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq);
 
 void q_variables(Point* globaldata, int numPoints);
 
 void q_var_derivatives(Point* globaldata, int numPoints, double power);
 
-void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, double tempdq[][2][4]);
+void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, TempqDers* tempdq);
 
 template <class Type>
 bool isNan(Type var);
