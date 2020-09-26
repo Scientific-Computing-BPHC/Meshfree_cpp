@@ -62,8 +62,6 @@ __device__ void outerindices_flux_residual(Point* globaldata, int idx, double Gx
 
 	double Gtemp[4] = {0};
 
-
-
 	for(int i=0; i<4; i++)
 		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i]);
 
