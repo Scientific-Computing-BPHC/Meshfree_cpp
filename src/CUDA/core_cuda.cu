@@ -5,6 +5,9 @@
 #include "flux_residual_cuda.hpp"
 #include "utils.hpp"
 
+#include<thrust/reduce.h>
+#include <thrust/system/cuda/execution_policy.h>
+
 __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
 
 template <class Type>
@@ -253,11 +256,13 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
     state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);
     cudaDeviceSynchronize();
     checkCudaErrors(cudaMemcpyAsync(res_old, res_old_d, mem_size_C, cudaMemcpyDeviceToHost, stream));
-    checkCudaErrors(cudaMemcpyAsync(res_sqr, res_sqr_d, mem_size_D, cudaMemcpyDeviceToHost, stream));
+    //checkCudaErrors(cudaMemcpyAsync(res_sqr, res_sqr_d, mem_size_D, cudaMemcpyDeviceToHost, stream));
 
-    double sig_res_sqr = 0.0;
-    for(int i=0; i<numPoints; i++)
-        sig_res_sqr+=res_sqr[i];
+    // double sig_res_sqr = 0.0;
+    // for(int i=0; i<numPoints; i++)
+    //     sig_res_sqr+=res_sqr[i];
+
+    double sig_res_sqr = thrust::reduce(thrust::cuda::par.on(stream), res_sqr_d, res_sqr_d + numPoints, (double) 0.0, thrust::plus<double>());
 
     double res_new = sqrt(sig_res_sqr)/numPoints;
 	double residue = 0.0;
