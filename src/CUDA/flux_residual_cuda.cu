@@ -17,14 +17,14 @@ __global__ void cal_flux_residual_cuda(Point* globaldata, int numPoints, Config 
     int threadx = threadIdx.x;
     int idx = bx*thread_dim.x + threadx;
 
-	__shared__ double Gxp[4*128];
-	__shared__ double Gxn[4*128];
-	__shared__ double Gyp[4*128];
-	__shared__ double Gyn[4*128];
+	__shared__ double Gxp[4*32];
+	__shared__ double Gxn[4*32];
+	__shared__ double Gyp[4*32];
+	__shared__ double Gyn[4*32];
 
-	__shared__ double result[4*128];
-	__shared__ double sig_del_x_del_f[4*128];
-	__shared__ double sig_del_y_del_f[4*128];
+	__shared__ double result[4*32];
+	__shared__ double sig_del_x_del_f[4*32];
+	__shared__ double sig_del_y_del_f[4*32];
 
 	if(idx < numPoints)
 	{
