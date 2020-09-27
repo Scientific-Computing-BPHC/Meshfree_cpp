@@ -18,7 +18,7 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config c
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-	//double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, result[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, result[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
 	
     double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
