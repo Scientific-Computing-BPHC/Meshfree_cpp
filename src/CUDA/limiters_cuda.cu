@@ -104,7 +104,7 @@ __device__ void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4]
 {
 	for(int iter=0; iter<4; iter++)
 	{
-		double intermediate_var = G_k[iter + 4*threadIdx.x] - G_i[iter + 4*threadIdx.x];
+		double intermediate_var = G_k[iter] - G_i[iter];
 		sig_del_x_del_f[iter + 4*threadIdx.x] += (intermediate_var * delta_s_weights);
 		sig_del_y_del_f[iter + 4*threadIdx.x] += (intermediate_var * delta_n_weights);
 	}

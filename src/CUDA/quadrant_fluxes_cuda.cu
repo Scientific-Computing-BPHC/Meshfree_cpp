@@ -17,15 +17,15 @@ __device__ void flux_quad_GxI(double G[4], double nx, double ny, double u1, doub
 
     double pr_by_rho = pr/rho;
     double u_sqr = ut*ut + un*un;
-    G[0+ 4*threadIdx.x] = rho * A2neg* (ut*A1neg - B1);
+    G[0] = rho * A2neg* (ut*A1neg - B1);
 
     double temp1 = pr_by_rho + ut*ut;
     double temp2 = temp1*A1neg - ut*B1;
-    G[1+ 4*threadIdx.x] = rho*A2neg*temp2;
+    G[1] = rho*A2neg*temp2;
 
     temp1 = ut*A1neg - B1;
     temp2 = un*A2neg - B2;
-    G[2 + 4*threadIdx.x] = rho*temp1*temp2;
+    G[2] = rho*temp1*temp2;
 
     temp1 = (7.0 *pr_by_rho) + u_sqr;
     temp2 = 0.5*ut*temp1*A1neg;
@@ -35,7 +35,7 @@ __device__ void flux_quad_GxI(double G[4], double nx, double ny, double u1, doub
 
     temp1 = ut*A1neg - B1;
     double temp4 = 0.5*rho*un*B2*temp1;
-    G[3 + 4*threadIdx.x] = rho*A2neg*(temp2 - temp3) - temp4;
+    G[3] = rho*A2neg*(temp2 - temp3) - temp4;
 }
 
 __device__ void flux_quad_GxII(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
@@ -55,15 +55,15 @@ __device__ void flux_quad_GxII(double G[4], double nx, double ny, double u1, dou
 
     double pr_by_rho = pr/rho;
     double u_sqr = ut*ut + un*un;
-    G[0 + 4*threadIdx.x] = rho * A2neg* (ut*A1pos + B1);
+    G[0] = rho * A2neg* (ut*A1pos + B1);
 
     double temp1 = pr_by_rho + ut*ut;
     double temp2 = temp1*A1pos + ut*B1;
-    G[1 + 4*threadIdx.x] = rho*A2neg*temp2;
+    G[1] = rho*A2neg*temp2;
 
     temp1 = ut*A1pos + B1;
     temp2 = un*A2neg - B2;
-    G[2 + 4*threadIdx.x] = rho*temp1*temp2;
+    G[2] = rho*temp1*temp2;
 
     temp1 = (7.0 *pr_by_rho) + u_sqr;
     temp2 = 0.5*ut*temp1*A1pos;
@@ -73,7 +73,7 @@ __device__ void flux_quad_GxII(double G[4], double nx, double ny, double u1, dou
 
     temp1 = ut*A1pos + B1;
     double temp4 = 0.5*rho*un*B2*temp1;
-    G[3 + 4*threadIdx.x] = rho*A2neg*(temp2 + temp3) - temp4;
+    G[3] = rho*A2neg*(temp2 + temp3) - temp4;
 }
 
 __device__ void flux_quad_GxIII(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
@@ -93,15 +93,15 @@ __device__ void flux_quad_GxIII(double G[4], double nx, double ny, double u1, do
 
     double pr_by_rho = pr/rho;
     double u_sqr = ut*ut + un*un;
-    G[0 + 4*threadIdx.x] = rho * A2pos* (ut*A1pos + B1);
+    G[0] = rho * A2pos* (ut*A1pos + B1);
 
     double temp1 = pr_by_rho + ut*ut;
     double temp2 = temp1*A1pos + ut*B1;
-    G[1 + 4*threadIdx.x] = rho*A2pos*temp2;
+    G[1] = rho*A2pos*temp2;
 
     temp1 = ut*A1pos + B1;
     temp2 = un*A2pos + B2;
-    G[2 + 4*threadIdx.x] = rho*temp1*temp2;
+    G[2] = rho*temp1*temp2;
 
     temp1 = (7.0 *pr_by_rho) + u_sqr;
     temp2 = 0.5*ut*temp1*A1pos;
@@ -111,7 +111,7 @@ __device__ void flux_quad_GxIII(double G[4], double nx, double ny, double u1, do
 
     temp1 = ut*A1pos - B1;
     double temp4 = 0.5*rho*un*B2*temp1;
-    G[3 + 4*threadIdx.x] = rho*A2pos*(temp2 + temp3) + temp4;
+    G[3] = rho*A2pos*(temp2 + temp3) + temp4;
 }
 
 __device__ void flux_quad_GxIV(double G[4], double nx, double ny, double u1, double u2, double rho, double pr)
@@ -131,15 +131,15 @@ __device__ void flux_quad_GxIV(double G[4], double nx, double ny, double u1, dou
 
     double pr_by_rho = pr/rho;
     double u_sqr = ut*ut + un*un;
-    G[0 + 4*threadIdx.x] = rho * A2pos* (ut*A1neg - B1);
+    G[0] = rho * A2pos* (ut*A1neg - B1);
 
     double temp1 = pr_by_rho + ut*ut;
     double temp2 = temp1*A1neg - ut*B1;
-    G[1 + 4*threadIdx.x] = rho*A2pos*temp2;
+    G[1] = rho*A2pos*temp2;
 
     temp1 = ut*A1neg - B1;
     temp2 = un*A2pos + B2;
-    G[2 + 4*threadIdx.x] = rho*temp1*temp2;
+    G[2] = rho*temp1*temp2;
 
     temp1 = (7.0 *pr_by_rho) + u_sqr;
     temp2 = 0.5*ut*temp1*A1neg;
@@ -149,5 +149,5 @@ __device__ void flux_quad_GxIV(double G[4], double nx, double ny, double u1, dou
 
     temp1 = ut*A1neg - B1;
     double temp4 = 0.5*rho*un*B2*temp1;
-    G[3 + 4*threadIdx.x] = rho*A2pos*(temp2 - temp3) + temp4;
+    G[3] = rho*A2pos*(temp2 - temp3) + temp4;
 }
