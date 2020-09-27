@@ -188,7 +188,7 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 }
 
-void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
+void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, cudaStream_t& stream, cudaGraph_t& graph, cudaGraphExec_t& instance, bool& graphCreated, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
 {
     int block_size = configData.core.threadsperblock;
 
@@ -201,13 +201,25 @@ void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_ol
     int rks = configData.core.rks;
     double cfl = configData.core.cfl;
     double power = configData.core.power;
-    call_func_delta_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, cfl, threads);
-    cudaDeviceSynchronize();
+
+
+    // if(!graphCreated)
+    // {
+    //     cudaStreamBeginCapture(stream, cudaStreamCaptureModeGlobal);
+        call_func_delta_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, cfl, threads);
+    //     cudaStreamEndCapture(stream, &graph);
+    //     cudaGraphInstantiate(&instance, graph, NULL, NULL, 0);
+    //     graphCreated = true;
+    // }
+
+    // cudaGraphLaunch(instance, stream);
+    // cudaStreamSynchronize(stream);
 
     for(int rk=0; rk<rks; rk++)
     {
-        call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, grid, stream, res_old, res_sqr, mem_size_C, mem_size_D);
+        call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, grid, stream, graph, instance, graphCreated, res_old, res_sqr, mem_size_C, mem_size_D);
     }
+    
 }
 
 __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim)
@@ -237,20 +249,41 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     }
 }
 
-void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
+void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t& stream, cudaGraph_t& graph, cudaGraphExec_t& instance, bool& graphCreated, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
 {
 
-    // Make the kernel calls
-    q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
-    q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
-
-    for(int inner_iters=0; inner_iters<2; inner_iters++) // Basically, three inner iters
+    if(!graphCreated)
     {
-        q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads);
-        q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
+        cudaStreamBeginCapture(stream, cudaStreamCaptureModeGlobal);
+    
+        // Make the kernel calls
+        q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
+        q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
+
+    //     cudaStreamEndCapture(stream, &graph);
+    //     cudaGraphInstantiate(&instance, graph, NULL, NULL, 0);
+    //     graphCreated = true;
+    // }
+
+    // cudaGraphLaunch(instance, stream);
+    // cudaStreamSynchronize(stream);
+
+        for(int inner_iters=0; inner_iters<2; inner_iters++) // Basically, three inner iters
+        {
+            q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads);
+            q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
+        }
+
+        cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
+
+        cudaStreamEndCapture(stream, &graph);
+        cudaGraphInstantiate(&instance, graph, NULL, NULL, 0);
+        graphCreated = true;
     }
 
-    cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
+    cudaGraphLaunch(instance, stream);
+    cudaStreamSynchronize(stream);
+    
     checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
 	checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
     state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);

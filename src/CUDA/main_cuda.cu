@@ -347,6 +347,9 @@ void meshfree_solver(char* file_name, int max_iters)
 void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters)
 {
 	auto begin = std::chrono::high_resolution_clock::now();
+	bool graphCreated = false;
+	cudaGraph_t graph;
+	cudaGraphExec_t instance;
 	cudaStream_t stream;  
     Point* globaldata_d;
     unsigned int mem_size_A = sizeof(struct Point) * numPoints;
@@ -366,12 +369,14 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 
     // Copy from host to device
     checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
-    checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
 	
+        
 	for (int i=0; i<max_iters; i++)
-	{
-		fpi_solver(i, globaldata_d, configData, res_old_d, res_sqr_d, numPoints, tempdq_d, stream, res_old, res_sqr, mem_size_C, mem_size_D);
+	{	
+		fpi_solver(i, globaldata_d, configData, res_old_d, res_sqr_d, numPoints, tempdq_d, stream, graph, instance, graphCreated, res_old, res_sqr, mem_size_C, mem_size_D);
 	}
+	
 	auto end = std::chrono::high_resolution_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
 	printf("\nTime measured: %.5f seconds.\n", elapsed.count() * 1e-9);
