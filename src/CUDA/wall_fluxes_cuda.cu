@@ -10,7 +10,7 @@ bool isNan(Type var)
     return false;
 }
 
-__device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result, Config configData)
+__device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, Config configData)
 {
 	
     double power = configData.core.power;
@@ -18,7 +18,7 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0};
 	
     double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -26,8 +26,8 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
 
 	for(int i=0; i<4; i++)
 	{
-		sig_del_x_del_f[i] = 0.0;
-		sig_del_y_del_f[i] = 0.0;
+		sig_del_x_del_f[i + 4*threadIdx.x] = 0.0;
+		sig_del_y_del_f[i + 4*threadIdx.x] = 0.0;
 	}
 
 	double x_i = globaldata[idx].x;
@@ -66,20 +66,20 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
     {
-    	Gxp[iter + 4*threadIdx.x] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gxp[iter + 4*threadIdx.x] = (sig_del_x_del_f[iter + 4*threadIdx.x]*sig_del_y_sqr - sig_del_y_del_f[iter + 4*threadIdx.x]*sig_del_x_del_y)*one_by_det;
 
     }
 	
 }
 
-__device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result, Config configData)
+__device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, Config configData)
 {
     double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0};
 
     double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -87,8 +87,8 @@ __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
 
 	for(int i=0; i<4; i++)
 	{
-		sig_del_x_del_f[i] = 0.0;
-		sig_del_y_del_f[i] = 0.0;
+		sig_del_x_del_f[i + 4*threadIdx.x] = 0.0;
+		sig_del_y_del_f[i + 4*threadIdx.x] = 0.0;
 	}
 
 	double x_i = globaldata[idx].x;
@@ -128,19 +128,19 @@ __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
     {
-    	Gxn[iter+ 4*threadIdx.x] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gxn[iter+ 4*threadIdx.x] = (sig_del_x_del_f[iter + 4*threadIdx.x]*sig_del_y_sqr - sig_del_y_del_f[iter + 4*threadIdx.x]*sig_del_x_del_y)*one_by_det;
     }
 
 }
 
-__device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* result, Config configData)
+__device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, Config configData)
 {
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0}, sig_del_x_del_f[4] ={0}, sig_del_y_del_f[4] = {0};
+    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0};
 
     double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -148,8 +148,8 @@ __device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* 
 
 	for(int i=0; i<4; i++)
 	{
-		sig_del_x_del_f[i] = 0.0;
-		sig_del_y_del_f[i] = 0.0;
+		sig_del_x_del_f[i + 4*threadIdx.x] = 0.0;
+		sig_del_y_del_f[i + 4*threadIdx.x] = 0.0;
 	}
 
 	double x_i = globaldata[idx].x;
@@ -188,7 +188,7 @@ __device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* 
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
     {
-    	Gyn[iter+ 4*threadIdx.x] = (sig_del_y_del_f[iter]*sig_del_x_sqr - sig_del_x_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gyn[iter+ 4*threadIdx.x] = (sig_del_y_del_f[iter + 4*threadIdx.x]*sig_del_x_sqr - sig_del_x_del_f[iter + 4*threadIdx.x]*sig_del_x_del_y)*one_by_det;
     }
 
 	
