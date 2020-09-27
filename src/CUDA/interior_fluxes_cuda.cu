@@ -56,7 +56,7 @@ __device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], Conf
     double det = sig_del_x_sqr * sig_del_y_sqr - sig_del_x_del_y * sig_del_x_del_y;
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
-    	Gxp[iter] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gxp[iter + 4*threadIdx.x] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
 
 }
 
@@ -113,7 +113,7 @@ __device__ void interior_dGx_neg(Point* globaldata, int idx, double Gxn[4], Conf
     double det = sig_del_x_sqr * sig_del_y_sqr - sig_del_x_del_y * sig_del_x_del_y;
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
-    	Gxn[iter] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gxn[iter+ 4*threadIdx.x] = (sig_del_x_del_f[iter]*sig_del_y_sqr - sig_del_y_del_f[iter]*sig_del_x_del_y)*one_by_det;
 
 }
 
@@ -171,7 +171,7 @@ __device__ void interior_dGy_pos(Point* globaldata, int idx, double Gyp[4], Conf
     double det = sig_del_x_sqr * sig_del_y_sqr - sig_del_x_del_y * sig_del_x_del_y;
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
-    	Gyp[iter] = (sig_del_y_del_f[iter]*sig_del_x_sqr - sig_del_x_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gyp[iter+ 4*threadIdx.x] = (sig_del_y_del_f[iter]*sig_del_x_sqr - sig_del_x_del_f[iter]*sig_del_x_del_y)*one_by_det;
 
 	
 }
@@ -230,7 +230,7 @@ __device__ void interior_dGy_neg(Point* globaldata, int idx,  double Gyn[4], Con
     double det = sig_del_x_sqr * sig_del_y_sqr - sig_del_x_del_y * sig_del_x_del_y;
     double one_by_det = 1.0/det;
     for(int iter =0; iter<4; iter++)
-    	Gyn[iter] = (sig_del_y_del_f[iter]*sig_del_x_sqr - sig_del_x_del_f[iter]*sig_del_x_del_y)*one_by_det;
+    	Gyn[iter+ 4*threadIdx.x] = (sig_del_y_del_f[iter]*sig_del_x_sqr - sig_del_x_del_f[iter]*sig_del_x_del_y)*one_by_det;
 
 	
 }

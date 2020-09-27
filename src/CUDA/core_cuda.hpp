@@ -150,7 +150,7 @@ struct Config
 		core.shapes = 1.0;
 		core.rho_inf = 1.0;
 		core.pr_inf = 0.7142857142857142;
-		core.threadsperblock = 128;
+		core.threadsperblock = 128; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
 		core.tscheme = "ssprk43";
