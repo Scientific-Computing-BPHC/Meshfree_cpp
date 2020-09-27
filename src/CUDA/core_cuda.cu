@@ -283,9 +283,11 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
 
     cudaGraphLaunch(instance, stream);
     cudaStreamSynchronize(stream);
+
+    // Remember that steam capture cannot handle device synchronize commands
     
     checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
-	checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
+    checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
     state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);
     cudaDeviceSynchronize();
     checkCudaErrors(cudaMemcpyAsync(res_old, res_old_d, mem_size_C, cudaMemcpyDeviceToHost, stream));

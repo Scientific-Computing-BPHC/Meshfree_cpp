@@ -77,10 +77,10 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 - [x] Serial Primal Code
 - [x] Profile Serial Primal
 - [X] Primal CUDA Parallel Version v1 
-- [ ] Primal CUDA Parallel Version v2 
+- [X] Primal CUDA Parallel Version v2 
     - [X] Reductions
-    - [ ] Shared Memory
-    - [ ] CUDA Graphs
+    - [X] Shared Memory
+    - [X] CUDA Graphs
 - [ ] Serial Adjoint Code with CoDiPack
 - [ ] Optimize and Benchmark Serial Primal once again
 - [ ] CUDAfy CoDiPack based Adjoint Solver
