@@ -3,15 +3,15 @@
 #include "quadrant_fluxes_cuda.hpp"
 #include "split_fluxes_cuda.hpp"
 
-__device__ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, Config configData)
+__device__ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
 {
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0};
-
+	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0};
+	
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
 	double sig_del_x_del_y = 0.0;
@@ -61,7 +61,7 @@ __device__ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], double*
 	
 }
 
-__device__ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, Config configData)
+__device__ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -72,7 +72,7 @@ __device__ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0};
+    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0};
 
 	for(int i=0; i<4; i++)
 	{
@@ -119,7 +119,7 @@ __device__ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
 
 }
 
-__device__ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, Config configData)
+__device__ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -130,7 +130,7 @@ __device__ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], double*
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
 
-	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0}, qtilde_i[4] = {0}, qtilde_k[4] = {0};
+	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0};
 	
 	for(int i=0; i<4; i++)
 	{

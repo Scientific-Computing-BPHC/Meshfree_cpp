@@ -18,7 +18,7 @@ __device__ void VLBroadcaster(double q[4], double qtilde[4], double max_q[4], do
 {
 	for(int i=0; i<4; i++)
 	{
-		del_neg = qtilde[i] - q[i];
+		del_neg = qtilde[i + 4*threadIdx.x] - q[i];
 		if(abs(del_neg) <= 1e-5)
 			phi[i] = 1.0;
 		else if (abs(del_neg) > 1e-5)
@@ -88,7 +88,7 @@ __device__ inline void update_qtildes(double qtilde[4], double q[4], double dq1[
 {
 	for(int iter=0; iter<4; iter++)
 	{
-		qtilde[iter] = q[iter] - 0.5 * (delta_x * dq1[iter] + delta_y * dq2[iter]);
+		qtilde[iter + 4*threadIdx.x] = q[iter] - 0.5 * (delta_x * dq1[iter] + delta_y * dq2[iter]);
 	}
 }
 
@@ -96,7 +96,7 @@ __device__ inline void update_qtildes(double qtilde[4], double q[4], double dq1[
 {
 	for(int iter=0; iter<4; iter++)
 	{
-		qtilde[iter] = q[iter] - 0.5 * phi[iter] * (delta_x * dq1[iter] + delta_y * dq2[iter]);
+		qtilde[iter + 4*threadIdx.x] = q[iter] - 0.5 * phi[iter] * (delta_x * dq1[iter] + delta_y * dq2[iter]);
 	}
 }
 
@@ -112,12 +112,12 @@ __device__ void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4]
 
 __device__ void qtilde_to_primitive(double result[4], double qtilde[4], double gamma)
 {
-    double beta = -qtilde[3]*0.5;
+    double beta = -qtilde[3 + 4*threadIdx.x]*0.5;
     double temp = 0.5/beta;
-    double u1 = qtilde[1]*temp;
-    double u2 = qtilde[2]*temp;
+    double u1 = qtilde[1 + 4*threadIdx.x]*temp;
+    double u2 = qtilde[2 + 4*threadIdx.x]*temp;
 
-    double temp1 = qtilde[0] + beta*(u1*u1 + u2*u2);
+    double temp1 = qtilde[0 + 4*threadIdx.x] + beta*(u1*u1 + u2*u2);
     double temp2 = temp1 - (log(beta)/(gamma-1));
     double rho = exp(temp2);
     double pr = rho*temp;
