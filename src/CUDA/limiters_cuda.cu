@@ -121,8 +121,8 @@ __device__ void qtilde_to_primitive(double result[4], double qtilde[4], double g
     double temp2 = temp1 - (log(beta)/(gamma-1));
     double rho = exp(temp2);
     double pr = rho*temp;
-    result[0] = u1;
-    result[1] = u2;
-    result[2] = rho;
-    result[3] = pr;
+    result[0 + 4*threadIdx.x] = u1;
+    result[1 + 4*threadIdx.x] = u2;
+    result[2 + 4*threadIdx.x] = rho;
+    result[3 + 4*threadIdx.x] = pr;
 }
