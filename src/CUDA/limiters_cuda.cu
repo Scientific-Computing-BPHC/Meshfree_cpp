@@ -20,7 +20,7 @@ __device__ void VLBroadcaster(double q[4], double qtilde[4], double max_q[4], do
 	{
 		del_neg = qtilde[i + 4*threadIdx.x] - q[i];
 		if(abs(del_neg) <= 1e-5)
-			phi[i] = 1.0;
+			phi[i + 4*threadIdx.x] = 1.0;
 		else if (abs(del_neg) > 1e-5)
 		{
 			if (del_neg > 0)
@@ -37,9 +37,9 @@ __device__ void VLBroadcaster(double q[4], double qtilde[4], double max_q[4], do
 
 			double temp = num/den;
 			if (temp<1.0)
-				phi[i] = temp;
+				phi[i + 4*threadIdx.x] = temp;
 			else
-				phi[i] = 1.0;
+				phi[i + 4*threadIdx.x] = 1.0;
 		}
 
 	}
@@ -96,7 +96,7 @@ __device__ inline void update_qtildes(double qtilde[4], double q[4], double dq1[
 {
 	for(int iter=0; iter<4; iter++)
 	{
-		qtilde[iter + 4*threadIdx.x] = q[iter] - 0.5 * phi[iter] * (delta_x * dq1[iter] + delta_y * dq2[iter]);
+		qtilde[iter + 4*threadIdx.x] = q[iter] - 0.5 * phi[iter+ 4*threadIdx.x] * (delta_x * dq1[iter] + delta_y * dq2[iter]);
 	}
 }
 
@@ -104,7 +104,7 @@ __device__ void update_delf(double sig_del_x_del_f[4], double sig_del_y_del_f[4]
 {
 	for(int iter=0; iter<4; iter++)
 	{
-		double intermediate_var = G_k[iter] - G_i[iter];
+		double intermediate_var = G_k[iter + 4*threadIdx.x] - G_i[iter + 4*threadIdx.x];
 		sig_del_x_del_f[iter + 4*threadIdx.x] += (intermediate_var * delta_s_weights);
 		sig_del_y_del_f[iter + 4*threadIdx.x] += (intermediate_var * delta_n_weights);
 	}
