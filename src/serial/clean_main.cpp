@@ -392,6 +392,9 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	auto end = std::chrono::high_resolution_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
 	printf("Time measured: %.5f seconds.\n", elapsed.count() * 1e-9);
+	std::ofstream timeoutput("time_" + std::to_string(numPoints) + "_" + std::to_string(max_iters));
+	timeoutput <<  elapsed.count() * 1e-9;
+	timeoutput.close();
 }
 
 

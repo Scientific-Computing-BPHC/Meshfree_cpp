@@ -13,6 +13,8 @@
 #include<sstream>
 #include<tuple>
 #include <chrono>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 #include "utils.hpp"
 #include "core_cuda.hpp"
@@ -35,22 +37,15 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 
 int main(int argc, char **argv)
 {
-	printf("\nMeshfree AD\n");
-
-	/* initialize random seed*/
-	srand (time(NULL));
-	arma_rng::set_seed_random();
-
-	meshfree_solver(argv[1], std::stoi(argv[2])); //Warning: Casting from char to int loses precision
-	//Gotta see if maintaining a global array id efficient or if passing around by reference is efficient
-	//For all we know, maintaining a global data structure instead of passing it around might be more efficient
+	printf("\nLeast-Squares Kinetic Upwind Meshfree Solver\n");
+	
+	meshfree_solver(argv[1], std::stoi(argv[2]));
 
 	cout<<"\n Max Iters: "<<std::stoi(argv[2])<<endl;
 }
 
 void meshfree_solver(char* file_name, int max_iters)
 {
-
 	Config configData = Config();
 	configData.setConfig();
 	if (debug_mode)
@@ -61,7 +56,6 @@ void meshfree_solver(char* file_name, int max_iters)
 		cout<<"\nFormat: "<<format<<endl;
 
 	cout<<"\nFilename: "<<file_name<<endl;
-	//cout<<"hi"<<endl;
 
 	int numPoints = 0;
 	std::fstream datafile(file_name, ios::in);
@@ -85,13 +79,11 @@ void meshfree_solver(char* file_name, int max_iters)
 	}
 	datafile.close();
 	
-	//cout<<new_file[1][0]<<endl;
 	cout<<"\nNo. of points: "<<numPoints<<endl;
 
 	std::regex ws_re("\\s+"); 
 	std::vector<vec_str> result;
-	for(int i=0; i<numPoints; i++)  // This might include the first line as well so, you need to store that separately or just throw the 1st line away (the one that contains the file length)
-									// There are 48738 lines apart from that
+	for(int i=0; i<numPoints; i++)
 	{ 
     	std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
     	result.push_back(temp);
@@ -112,19 +104,48 @@ void meshfree_solver(char* file_name, int max_iters)
 
 	std::vector<vec_str>().swap(result); // Free up the space taken up by result
 
-	Point* globaldata = new Point[numPoints];
+	/* Point data structure broken up into individual components */
+
+	int* localID = new int[numPoints];
+	double* x = new double[numPoints];
+	double* y = new double[numPoints];
+	int* left = new int[numPoints];
+	int* right = new int[numPoints];
+	short* flag_1 = new short[numPoints];
+	short* flag_2 = new short[numPoints];
+	double* short_distance = new double[numPoints];
+	short* nbhs = new short[numPoints];
+	
+
+	// 	int conn[20];
+	// 	double nx, ny;
+	// 	// Size 4 (Pressure, vx, vy, density) x numberpts
+	// 	double prim[4];
+	// 	double flux_res[4];
+	// 	double q[4];
+	// 	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
+	// 	double dq1[4];
+	// 	double dq2[4];
+	// 	double entropy;
+	// 	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
+	// 	int xpos_conn[20];
+	// 	int xneg_conn[20];
+	// 	int ypos_conn[20];
+	// 	int yneg_conn[20];
+	// 	double delta;
+	// 	double max_q[4];
+	// 	double min_q[4];
+	// 	double prim_old[4];
+
 	double res_old[1] = {0.0};
 
 	double defprimal[4];
 	getInitialPrimitive(configData, defprimal);
 	//printPrimal(defprimal);
 
-	cout<<"\n-----Start Read-----\n"; // readFile function in Julia
+	cout<<"\n-----Start Read-----\n"; 
 
-	//cout<<result_doub[0][0]<<endl;
-
-
-/* Read File Legacy */
+	/* Read File Legacy */
 
 #if 0
 	for(int idx=0; idx<numPoints; idx++)
@@ -194,7 +215,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 #endif
 
-/* Read File Quadtree */
+	/* Read File Quadtree */
 
 	for(int idx=0; idx<numPoints; idx++)
 	{

@@ -51,39 +51,39 @@ struct TempqDers
 	}
 };
 
-struct Point
-{
-	int localID;
-	double x, y;
-	int left, right;
-	int flag_1, flag_2; // Int8 in the Julia code
-	double short_distance;
-	int nbhs;
-	int conn[20];
-	double nx, ny;
-	// Size 4 (Pressure, vx, vy, density) x numberpts
-	double prim[4];
-	double flux_res[4];
-	double q[4];
-	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
-	double dq1[4];
-	double dq2[4];
-	double entropy;
-	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
-	int xpos_conn[20];
-	int xneg_conn[20];
-	int ypos_conn[20];
-	int yneg_conn[20];
-	double delta;
-	double max_q[4];
-	double min_q[4];
-	double prim_old[4];
+// struct Point
+// {
+// 	int localID;
+// 	double x, y;
+// 	int left, right;
+// 	int flag_1, flag_2; // Int8 in the Julia code
+// 	double short_distance;
+// 	int nbhs;
+// 	int conn[20];
+// 	double nx, ny;
+// 	// Size 4 (Pressure, vx, vy, density) x numberpts
+// 	double prim[4];
+// 	double flux_res[4];
+// 	double q[4];
+// 	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
+// 	double dq1[4];
+// 	double dq2[4];
+// 	double entropy;
+// 	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
+// 	int xpos_conn[20];
+// 	int xneg_conn[20];
+// 	int ypos_conn[20];
+// 	int yneg_conn[20];
+// 	double delta;
+// 	double max_q[4];
+// 	double min_q[4];
+// 	double prim_old[4];
 
-	//Point Constructor
+// 	//Point Constructor
 
-	Point() {}
+// 	Point() {}
 
-};
+// };
 
 struct Config
 {
@@ -150,7 +150,7 @@ struct Config
 		core.shapes = 1.0;
 		core.rho_inf = 1.0;
 		core.pr_inf = 0.7142857142857142;
-		core.threadsperblock = 128; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
+		core.threadsperblock = 32; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
 		core.tscheme = "ssprk43";
