@@ -3,7 +3,8 @@
 #include "quadrant_fluxes_cuda.hpp"
 #include "split_fluxes_cuda.hpp"
 
-__device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
+__device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, \
+	double* qtilde_i, double* qtilde_k, Config configData, int* xpos_conn)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -33,7 +34,7 @@ __device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], doub
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].xpos_conn[i];
+		int conn = xpos_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -61,7 +62,8 @@ __device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], doub
 
 }
 
-__device__ void interior_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
+__device__ void interior_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, \
+	double* qtilde_i, double* qtilde_k, Config configData, int* xneg_conn)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -91,7 +93,7 @@ __device__ void interior_dGx_neg(Point* globaldata, int idx, double Gxn[4], doub
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].xneg_conn[i];
+		int conn = xneg_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -118,7 +120,8 @@ __device__ void interior_dGx_neg(Point* globaldata, int idx, double Gxn[4], doub
 
 }
 
-__device__ void interior_dGy_pos(Point* globaldata, int idx, double Gyp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
+__device__ void interior_dGy_pos(Point* globaldata, int idx, double Gyp[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, \
+	double* qtilde_i, double* qtilde_k, Config configData, int* ypos_conn)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -148,7 +151,7 @@ __device__ void interior_dGy_pos(Point* globaldata, int idx, double Gyp[4], doub
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].ypos_conn[i];
+		int conn = ypos_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -177,7 +180,8 @@ __device__ void interior_dGy_pos(Point* globaldata, int idx, double Gyp[4], doub
 	
 }
 
-__device__ void interior_dGy_neg(Point* globaldata, int idx,  double Gyn[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
+__device__ void interior_dGy_neg(Point* globaldata, int idx,  double Gyn[4], double* result,  double* sig_del_x_del_f, double* sig_del_y_del_f, \
+	double* qtilde_i, double* qtilde_k, Config configData, int* yneg_conn)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -207,7 +211,7 @@ __device__ void interior_dGy_neg(Point* globaldata, int idx,  double Gyn[4], dou
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].yneg_conn[i];
+		int conn = yneg_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;

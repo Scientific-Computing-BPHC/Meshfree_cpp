@@ -5,8 +5,8 @@ JSON_PATH = /home/hari/Work/build/vcpkg/packages/jsoncpp_x64-linux/include
 LDFLAGS = -lm -larmadillo -lgomp 
 # CPPFLAGS  = -Wall -pg -O2 -std=c++0x -fpermissive -I $(JSON_PATH)
 CUDA_PATH = /home/hari/Work/Common
-CFLAGS  = -std=c++11 -Xcompiler -fopenmp -I $(CUDA_PATH)
-CPPFLAGS  = -Wall -pg -O2 -fpermissive -I $(JSON_PATH) -I $(CUDA_PATH)
+CFLAGS  = -std=c++11 -Xcompiler -fopenmp -Xptxas -O3 -I $(CUDA_PATH)
+CPPFLAGS  = -Wall -pg -O3 -fpermissive -I $(JSON_PATH) -I $(CUDA_PATH)
 
 # ## Serial
 # OBJ = clean_main.o core.o utils.o point.o state_update.o flux_residual.o wall_fluxes.o limiters.o quadrant_fluxes.o split_fluxes.o outer_fluxes.o interior_fluxes.o 

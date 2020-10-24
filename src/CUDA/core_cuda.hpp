@@ -58,7 +58,7 @@ struct Point
 	int left, right;
 	int flag_1, flag_2; // Int8 in the Julia code
 	double short_distance;
-	int nbhs;
+	short nbhs;
 	int conn[20];
 	double nx, ny;
 	// Size 4 (Pressure, vx, vy, density) x numberpts
@@ -70,10 +70,6 @@ struct Point
 	double dq2[4];
 	double entropy;
 	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
-	int xpos_conn[20];
-	int xneg_conn[20];
-	int ypos_conn[20];
-	int yneg_conn[20];
 	double delta;
 	double max_q[4];
 	double min_q[4];
@@ -150,7 +146,7 @@ struct Config
 		core.shapes = 1.0;
 		core.rho_inf = 1.0;
 		core.pr_inf = 0.7142857142857142;
-		core.threadsperblock = 128; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
+		core.threadsperblock = 32; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
 		core.tscheme = "ssprk43";
@@ -213,11 +209,15 @@ void placeNormals(Point* globaldata, int idx, Config configData, long long inter
 
 xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
 
-void calculateConnectivity(Point* globaldata, int idx);
+void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
 
-void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D);
+void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, \
+cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, \
+int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
 
-void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D);
+void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, \
+double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], \
+double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
 
 __global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
 

@@ -30,8 +30,8 @@ typedef std::vector<long double> vec_ldoub;
 bool debug_mode = true;
 
 void meshfree_solver(char* file_name, int num_iters);
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters);
-void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters);
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
 
 int main(int argc, char **argv)
 {
@@ -113,6 +113,10 @@ void meshfree_solver(char* file_name, int max_iters)
 	std::vector<vec_str>().swap(result); // Free up the space taken up by result
 
 	Point* globaldata = new Point[numPoints];
+	int* xpos_conn = new int[numPoints*20];
+	int* xneg_conn = new int[numPoints*20];
+	int* ypos_conn = new int[numPoints*20];
+	int* yneg_conn = new int[numPoints*20];
 	double res_old[1] = {0.0};
 
 	double defprimal[4];
@@ -182,10 +186,10 @@ void meshfree_solver(char* file_name, int max_iters)
 
 		for(int i=0; i<20; i++)
 		{
-			globaldata[idx].xpos_conn[i] = 0;
-			globaldata[idx].xneg_conn[i] = 0;
-			globaldata[idx].ypos_conn[i] = 0;
-			globaldata[idx].yneg_conn[i] = 0;
+			xpos_conn[idx*20 + i] = 0;
+			xneg_conn[idx*20 + i] = 0;
+			ypos_conn[idx*20 + i] = 0;
+			yneg_conn[idx*20 + i] = 0; 
 		}
 
 	}
@@ -251,10 +255,10 @@ void meshfree_solver(char* file_name, int max_iters)
 
 		for(int i=0; i<20; i++)
 		{
-			globaldata[idx].xpos_conn[i] = 0;
-			globaldata[idx].xneg_conn[i] = 0;
-			globaldata[idx].ypos_conn[i] = 0;
-			globaldata[idx].yneg_conn[i] = 0;
+			xpos_conn[idx*20 + i] = 0;
+			xneg_conn[idx*20 + i] = 0;
+			ypos_conn[idx*20 + i] = 0;
+			yneg_conn[idx*20 + i] = 0; 
 		}
 
 	}
@@ -331,22 +335,24 @@ void meshfree_solver(char* file_name, int max_iters)
 	cout<<"\n-----Start Connectivity Generation-----\n";
 
 	for(int idx=0; idx<numPoints; idx++)
-		calculateConnectivity(globaldata, idx);
+		calculateConnectivity(globaldata, idx, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
 
 	cout<<"\n-----Connectivity Generation Done-----\n";  
 
 	cout<<"\n"<<max_iters+1<<endl;
 
-	test_code(globaldata, configData, res_old, numPoints, max_iters);
+	test_code(globaldata, configData, res_old, numPoints, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+
 
 	cout<<"\n--------Done--------\n"<<endl;
 
 }	
 
 
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters)
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
 {
 	auto begin = std::chrono::high_resolution_clock::now();
+	// I'M ASSUMING IN FORTRAN ALSO THEY MEASURE THE COPY TIME AND NOT JUST COMPUTATION TIME. Just doesn't make sense to ignore copy time, although it won't be too huge
 	cudaStream_t stream;  
     Point* globaldata_d;
     unsigned int mem_size_A = sizeof(struct Point) * numPoints;
@@ -354,23 +360,34 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
     unsigned int mem_size_B = sizeof(struct TempqDers) * numPoints;
     double* res_sqr_d, *res_old_d;
     unsigned int mem_size_C = sizeof(double);
-    unsigned int mem_size_D = sizeof(double) * numPoints;
+	unsigned int mem_size_D = sizeof(double) * numPoints;
+	unsigned int mem_size_E = sizeof(int) * 20 * numPoints;
+	int* xpos_conn_d, *xneg_conn_d, *ypos_conn_d, *yneg_conn_d;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&tempdq_d), mem_size_B)); 
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_old_d), mem_size_C));
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_sqr_d), mem_size_D));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_sqr_d), mem_size_D));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&xpos_conn_d), mem_size_E));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&xneg_conn_d), mem_size_E));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&ypos_conn_d), mem_size_E));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&yneg_conn_d), mem_size_E));
 	checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
-	
 
     double* res_sqr = new double[numPoints];
 
     // Copy from host to device
     checkCudaErrors(cudaMemcpyAsync(globaldata_d, globaldata, mem_size_A, cudaMemcpyHostToDevice, stream));
-    checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(tempdq_d, tempdq, mem_size_B, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(xpos_conn_d, xpos_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(xneg_conn_d, xneg_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(ypos_conn_d, ypos_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(yneg_conn_d, yneg_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
 	
 	for (int i=0; i<max_iters; i++)
 	{
-		fpi_solver(i, globaldata_d, configData, res_old_d, res_sqr_d, numPoints, tempdq_d, stream, res_old, res_sqr, mem_size_C, mem_size_D);
+		fpi_solver(i, globaldata_d, configData, res_old_d, res_sqr_d, numPoints, tempdq_d, stream, res_old, res_sqr, mem_size_C, mem_size_D, \
+			xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d);
+
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
@@ -381,11 +398,15 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
     checkCudaErrors(cudaFree(globaldata_d)); 
     checkCudaErrors(cudaFree(tempdq_d));
     checkCudaErrors(cudaFree(res_old_d));
-    checkCudaErrors(cudaFree(res_sqr_d));
+	checkCudaErrors(cudaFree(res_sqr_d));
+	checkCudaErrors(cudaFree(xpos_conn_d));
+	checkCudaErrors(cudaFree(xneg_conn_d));
+	checkCudaErrors(cudaFree(ypos_conn_d));
+	checkCudaErrors(cudaFree(yneg_conn_d));
 }
 
 
-void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters)
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
 {
 	cout<<"\nStarting warmup function \n";
 	res_old[0] = 0.0;
@@ -396,5 +417,6 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	for (int i=0; i<numPoints; i++)
 		tempdq[i].setTempdq();
 
-	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters);
+	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+
 }

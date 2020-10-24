@@ -10,7 +10,8 @@ bool isNan(Type var)
     return false;
 }
 
-__device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f,  double* qtilde_i, double* qtilde_k, Config configData)
+__device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result, double* sig_del_x_del_f, \
+	double* sig_del_y_del_f,  double* qtilde_i, double* qtilde_k, Config configData, int* xpos_conn)
 {
 	
     double power = configData.core.power;
@@ -41,7 +42,7 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].xpos_conn[i];
+		int conn = xpos_conn[idx*20 +i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -72,7 +73,8 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
 	
 }
 
-__device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
+__device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result, double* sig_del_x_del_f, \
+	double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData, int* xneg_conn)
 {
     double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
@@ -102,7 +104,7 @@ __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].xneg_conn[i];
+		int conn = xneg_conn[idx*20 +i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -133,7 +135,8 @@ __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
 
 }
 
-__device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData)
+__device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, \
+	 double* qtilde_i, double* qtilde_k, Config configData, int* yneg_conn)
 {
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
@@ -163,7 +166,7 @@ __device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* 
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].yneg_conn[i];
+		int conn = yneg_conn[idx*20 +i];
 		if(conn == 0) break;
 
 		conn = conn - 1;

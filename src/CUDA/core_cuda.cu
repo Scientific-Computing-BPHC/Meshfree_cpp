@@ -82,7 +82,7 @@ xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my)
 	return std::make_tuple(nx, ny);
 }
 
-void calculateConnectivity(Point* globaldata, int idx)
+void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
 {
 	Point ptInterest = globaldata[idx];
 	double currx = ptInterest.x;
@@ -97,10 +97,10 @@ void calculateConnectivity(Point* globaldata, int idx)
     int xneg_nbhs = 0;
     int ypos_nbhs = 0;
     int yneg_nbhs = 0; 
-    int xpos_conn[20] = {0};
-    int ypos_conn[20] = {0};
-    int xneg_conn[20] = {0};
-    int yneg_conn[20] = {0};
+    int xpos_conn_tmp[20] = {0};
+    int ypos_conn_tmp[20] = {0};
+    int xneg_conn_tmp[20] = {0};
+    int yneg_conn_tmp[20] = {0};
 
     // /* Start Connectivity Generation */
     for (int i=0; i<20; i++)
@@ -129,14 +129,14 @@ void calculateConnectivity(Point* globaldata, int idx)
     	if(delta_s <= 0.0)
     	{
     		
-    		xpos_conn[xpos_nbhs] = itm;
+    		xpos_conn_tmp[xpos_nbhs] = itm;
             xpos_nbhs+=1;
     	}
 
     	if(delta_s >= 0.0)
     	{
     		
-    		xneg_conn[xneg_nbhs] = itm;
+    		xneg_conn_tmp[xneg_nbhs] = itm;
             xneg_nbhs+=1;
     	}
 
@@ -145,14 +145,14 @@ void calculateConnectivity(Point* globaldata, int idx)
     		if(delta_n<=0.0)
     		{
     			
-    			ypos_conn[ypos_nbhs] = itm;
+    			ypos_conn_tmp[ypos_nbhs] = itm;
                 ypos_nbhs+=1;
     		}
 
     		if(delta_n>=0.0)
     		{
     			
-    			yneg_conn[yneg_nbhs] = itm;
+    			yneg_conn_tmp[yneg_nbhs] = itm;
                 yneg_nbhs+=1;
     		}
     	}
@@ -160,14 +160,14 @@ void calculateConnectivity(Point* globaldata, int idx)
     	else if (flag==0)
     	{
     		
-    		yneg_conn[yneg_nbhs] = itm;
+    		yneg_conn_tmp[yneg_nbhs] = itm;
             yneg_nbhs+=1;
     	}
 
     	else if (flag==2)
     	{
     		
-    		ypos_conn[ypos_nbhs] = itm;
+    		ypos_conn_tmp[ypos_nbhs] = itm;
             ypos_nbhs+=1;
     	}
     }
@@ -175,10 +175,10 @@ void calculateConnectivity(Point* globaldata, int idx)
 
     for(int i=0; i<20; i++)
     {
-    	globaldata[idx].xpos_conn[i] = xpos_conn[i];
-    	globaldata[idx].xneg_conn[i] = xneg_conn[i];
-    	globaldata[idx].ypos_conn[i] = ypos_conn[i];
-    	globaldata[idx].yneg_conn[i] = yneg_conn[i];
+    	xpos_conn[idx*20 + i] = xpos_conn_tmp[i];
+    	xneg_conn[idx*20 + i] = xneg_conn_tmp[i];
+    	ypos_conn[idx*20 + i] = ypos_conn_tmp[i];
+    	yneg_conn[idx*20 + i] = yneg_conn_tmp[i];
     }
 
     globaldata[idx].xpos_nbhs = xpos_nbhs;
@@ -188,7 +188,9 @@ void calculateConnectivity(Point* globaldata, int idx)
 
 }
 
-void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
+void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, \
+    TempqDers* tempdq_d, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, \
+    int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
 {
     int block_size = configData.core.threadsperblock;
 
@@ -206,7 +208,8 @@ void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_ol
 
     for(int rk=0; rk<rks; rk++)
     {
-        call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, grid, stream, res_old, res_sqr, mem_size_C, mem_size_D);
+        call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, \
+            grid, stream, res_old, res_sqr, mem_size_C, mem_size_D, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
     }
 }
 
@@ -237,7 +240,9 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     }
 }
 
-void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D)
+void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, \
+    double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], \
+    double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn_d, int* xneg_conn_d, int* ypos_conn_d, int* yneg_conn_d)
 {
 
     // Make the kernel calls
@@ -250,7 +255,7 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
         q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
     }
 
-    cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads);
+    cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads, xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d);
     checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
 	checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
     state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);
