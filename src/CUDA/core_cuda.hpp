@@ -59,21 +59,21 @@ struct Point
 	int flag_1, flag_2; // Int8 in the Julia code
 	double short_distance;
 	short nbhs;
-	int conn[20];
+	//int conn[20];
 	double nx, ny;
 	// Size 4 (Pressure, vx, vy, density) x numberpts
-	double prim[4];
-	double flux_res[4];
-	double q[4];
+	// double prim[4];
+	// double flux_res[4];
+	// double q[4];
 	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
-	double dq1[4];
-	double dq2[4];
+	// double dq1[4];
+	// double dq2[4];
 	double entropy;
 	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
 	double delta;
-	double max_q[4];
-	double min_q[4];
-	double prim_old[4];
+	// double max_q[4];
+	// double min_q[4];
+	// double prim_old[4];
 
 	//Point Constructor
 
@@ -209,23 +209,25 @@ void placeNormals(Point* globaldata, int idx, Config configData, long long inter
 
 xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
 
-void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
+void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, int* connec);
 
 void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, TempqDers* tempdq_d, \
 cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, \
-int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
+int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+int* connec_d, double* prim_d, double* flux_res_d, double* q_d, double* dq1_d, double* dq2_d, double* max_q_d, double* min_q_d, double* prim_old_d);
 
 void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, \
 double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], \
-double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
+double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+int* connec_d, double* prim_d, double* flux_res_d, double* q_d, double* dq1_d, double* dq2_d, double* max_q_d, double* min_q_d, double* prim_old_d);
 
-__global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
+__global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim, double* prim, double* q);
 
-__global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim);
+__global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim, double* q, double* dq1, double* dq2, int* connec, double* max_q, double* min_q);
 
-__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, dim3 thread_dim);
+__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, dim3 thread_dim, int* connec, double* q, double* dq1, double* dq2);
 
-__global__ void q_var_derivatives_update_innerloop_cuda(Point* globaldata, TempqDers* tempdq, dim3 thread_dim);
+__global__ void q_var_derivatives_update_innerloop_cuda(Point* globaldata, TempqDers* tempdq, dim3 thread_dim, double* dq1, double* dq2);
 
 template <class Type>
 bool isNan(Type var);

@@ -8,7 +8,8 @@
 #include<thrust/reduce.h>
 #include <thrust/system/cuda/execution_policy.h>
 
-__device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4]);
+__device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, \
+    double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double* q, double* dq1, double* dq2);
 
 template <class Type>
 bool isNan(Type var)
@@ -82,7 +83,7 @@ xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my)
 	return std::make_tuple(nx, ny);
 }
 
-void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
+void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, int* connec)
 {
 	Point ptInterest = globaldata[idx];
 	double currx = ptInterest.x;
@@ -105,7 +106,7 @@ void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg
     // /* Start Connectivity Generation */
     for (int i=0; i<20; i++)
     {
-    	int itm = ptInterest.conn[i];
+    	int itm = connec[idx*20 +i];
     	if (itm==0) 
     	{
     		//cout<<"\n Breaking"<<endl;
@@ -190,7 +191,8 @@ void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg
 
 void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_old_d, double* res_sqr_d, int numPoints, \
     TempqDers* tempdq_d, cudaStream_t stream, double res_old[1], double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, \
-    int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
+    int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+    int* connec_d, double* prim_d, double* flux_res_d, double* q_d, double* dq1_d, double* dq2_d, double* max_q_d, double* min_q_d, double* prim_old_d)
 {
     int block_size = configData.core.threadsperblock;
 
@@ -203,17 +205,18 @@ void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_ol
     int rks = configData.core.rks;
     double cfl = configData.core.cfl;
     double power = configData.core.power;
-    call_func_delta_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, cfl, threads);
+    call_func_delta_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, cfl, threads, connec_d, prim_d, prim_old_d);
     cudaDeviceSynchronize();
 
     for(int rk=0; rk<rks; rk++)
     {
         call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, \
-            grid, stream, res_old, res_sqr, mem_size_C, mem_size_D, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+            grid, stream, res_old, res_sqr, mem_size_C, mem_size_D, xpos_conn, xneg_conn, ypos_conn, yneg_conn, \
+            connec_d, prim_d, flux_res_d, q_d, dq1_d, dq2_d, max_q_d, min_q_d, prim_old_d);
     }
 }
 
-__global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim)
+__global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim, double* prim, double* q)
 {
     int bx = blockIdx.x;
     int tx = threadIdx.x;
@@ -222,10 +225,10 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
     double q_result[4] = {0};
     if(idx < numPoints)
     {
-        double rho = globaldata[idx].prim[0];
-        double u1 = globaldata[idx].prim[1];
-        double u2 = globaldata[idx].prim[2];
-        double pr = globaldata[idx].prim[3];
+        double rho = prim[idx*4 + 0];
+        double u1 = prim[idx*4 + 1];
+        double u2 = prim[idx*4 + 2];
+        double pr = prim[idx*4 + 3];
         double beta = 0.5 * (rho/pr);
 
         double two_times_beta = 2.0 * beta;
@@ -235,32 +238,36 @@ __global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_d
         q_result[3] = -two_times_beta;
         for(int i=0; i<4; i++)
         {
-            globaldata[idx].q[i] = q_result[i];
+            q[idx*4 + i] = q_result[i];
         }
     }
 }
 
 void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, TempqDers* tempdq_d, int block_size, Config configData, double* res_old_d, \
     double* res_sqr_d, int iter, int rk, int rks, dim3 threads, dim3 grid, cudaStream_t stream, double res_old[1], \
-    double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn_d, int* xneg_conn_d, int* ypos_conn_d, int* yneg_conn_d)
+    double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn_d, int* xneg_conn_d, int* ypos_conn_d, int* yneg_conn_d,\
+    int* connec_d, double* prim_d, double* flux_res_d, double* q_d, double* dq1_d, double* dq2_d, double* max_q_d, double* min_q_d, double* prim_old_d)
 {
 
     // Make the kernel calls
-    q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads);
-    q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads);
+    q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads, prim_d, q_d);
+    q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads, q_d, dq1_d, dq2_d, connec_d, max_q_d, min_q_d);
 
     for(int inner_iters=0; inner_iters<2; inner_iters++) // Basically, three inner iters
     {
-        q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads);
-        q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads);
+        q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads, connec_d, q_d, dq1_d, dq2_d);
+        q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads, dq1_d, dq2_d);
     }
 
-    cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads, xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d);
+    cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads, xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d, flux_res_d,\
+    q_d, max_q_d, min_q_d, dq1_d, dq2_d);
     checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 
 	checkCudaErrors(cudaMemcpyAsync(res_sqr_d, res_sqr, mem_size_D, cudaMemcpyHostToDevice, stream)); 
-    state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads);
+    state_update_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, iter, res_old_d, rk, rks, res_sqr_d, threads, prim_d, prim_old_d, flux_res_d);
     cudaDeviceSynchronize();
     checkCudaErrors(cudaMemcpyAsync(res_old, res_old_d, mem_size_C, cudaMemcpyDeviceToHost, stream));
+
+
     //checkCudaErrors(cudaMemcpyAsync(res_sqr, res_sqr_d, mem_size_D, cudaMemcpyDeviceToHost, stream));
 
     // double sig_res_sqr = 0.0;
@@ -285,13 +292,13 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
 
 }
 
-__global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim)
+__global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim, double* q, double* dq1, double* dq2, int* connec, double* max_q, double* min_q)
 {
     int bx = blockIdx.x;
     int tx = threadIdx.x;
     int idx = bx*thread_dim.x + tx;
 
-    double sig_del_x_del_q[4], sig_del_y_del_q[4], min_q[4], max_q[4];
+    double sig_del_x_del_q[4], sig_del_y_del_q[4], min_q_tmp[4], max_q_tmp[4];
 
     if(idx < numPoints)
     {
@@ -311,14 +318,14 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
         #pragma unroll
         for(int i=0; i<4; i++)
         {
-            max_q[i] = globaldata[idx].q[i];
-            min_q[i] = globaldata[idx].q[i];
+            max_q_tmp[i] = q[idx*4 + i];
+            min_q_tmp[i] = q[idx*4 + i];
         }
 
         #pragma unroll
         for(int i=0; i<20; i++)
         {
-            int conn = globaldata[idx].conn[i];
+            int conn = connec[idx*20 + i];
             if(conn == 0) 
             {
                 break;
@@ -341,7 +348,7 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
             #pragma unroll
             for(int iter=0; iter<4; iter++)
             {
-                double intermediate_var = weights * (globaldata[conn].q[iter] - globaldata[idx].q[iter]);
+                double intermediate_var = weights * (q[conn*4 + iter] - q[idx*4 + iter]);
                 sig_del_x_del_q[iter] = sig_del_x_del_q[iter] + (delta_x * intermediate_var);
                 sig_del_y_del_q[iter] = sig_del_y_del_q[iter] + (delta_y * intermediate_var);
 
@@ -350,13 +357,13 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
             #pragma unroll
             for(int j=0; j<4; j++)
             {
-                if (max_q[j] < globaldata[conn].q[j])
+                if (max_q_tmp[j] < q[conn*4 + j])
                 {
-                    max_q[j] = globaldata[conn].q[j];
+                    max_q_tmp[j] = q[conn*4 + j];
                 }
-                if(min_q[j] > globaldata[conn].q[j])
+                if(min_q_tmp[j] > q[conn*4 + j])
                 {
-                    min_q[j] = globaldata[conn].q[j];
+                    min_q_tmp[j] = q[conn*4 + j];
                 }
             }
         }
@@ -364,8 +371,8 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
         #pragma unroll
         for(int i=0; i<4; i++)
         {
-            globaldata[idx].max_q[i] = max_q[i];
-            globaldata[idx].min_q[i] = min_q[i];
+            max_q[idx*4 + i] = max_q_tmp[i];
+            min_q[idx*4 + i] = min_q_tmp[i];
         }
 
         double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
@@ -374,14 +381,14 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
         #pragma unroll
         for(int iter=0; iter<4; iter++)
         {
-            globaldata[idx].dq1[iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
-            globaldata[idx].dq2[iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
+            dq1[idx*4 + iter] = one_by_det * (sig_del_x_del_q[iter] * sig_del_y_sqr - sig_del_y_del_q[iter] * sig_del_x_del_y);
+            dq2[idx*4 + iter] = one_by_det * (sig_del_y_del_q[iter] * sig_del_x_sqr - sig_del_x_del_q[iter] * sig_del_x_del_y);
         }
 
     }
 }
 
-__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, dim3 thread_dim)
+__global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoints, double power, TempqDers* tempdq, dim3 thread_dim, int* connec, double* q, double* dq1, double* dq2)
 {   
     int bx = blockIdx.x;
     int tx = threadIdx.x;
@@ -407,7 +414,7 @@ __global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoint
         #pragma unroll
         for(int i=0; i<20; i++)
         {
-            int conn = globaldata[idx].conn[i];
+            int conn = connec[idx*20 + i];
             if(conn == 0) break;
 
             conn = conn - 1;
@@ -424,7 +431,7 @@ __global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoint
             sig_del_y_sqr += ((delta_y * delta_y) * weights);
             sig_del_x_del_y += ((delta_x * delta_y) * weights);
 
-            q_var_derivatives_get_sum_delq_innerloop(globaldata, idx, conn, weights, delta_x, delta_y, qi_tilde, qk_tilde, sig_del_x_del_q, sig_del_y_del_q);
+            q_var_derivatives_get_sum_delq_innerloop(globaldata, idx, conn, weights, delta_x, delta_y, qi_tilde, qk_tilde, sig_del_x_del_q, sig_del_y_del_q, q, dq1, dq2);
         }
 
         double det = (sig_del_x_sqr * sig_del_y_sqr) - (sig_del_x_del_y * sig_del_x_del_y);
@@ -441,14 +448,15 @@ __global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoint
 
 }
 
-__device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4])
+__device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, \
+    double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double* q, double* dq1, double* dq2)
 {
    #pragma unroll 
    for(int iter=0; iter<4; iter++)
     {
 
-        qi_tilde[iter] = globaldata[idx].q[iter] - 0.5 * (delta_x * globaldata[idx].dq1[iter] + delta_y * globaldata[idx].dq2[iter]);
-        qk_tilde[iter] = globaldata[conn].q[iter] - 0.5 * (delta_x * globaldata[conn].dq1[iter] + delta_y * globaldata[conn].dq2[iter]);
+        qi_tilde[iter] = q[idx*4 + iter] - 0.5 * (delta_x * dq1[idx*4 + iter] + delta_y * dq2[idx*4 + iter]);
+        qk_tilde[iter] = q[conn*4 + iter] - 0.5 * (delta_x * dq1[conn*4 + iter] + delta_y * dq2[conn*4 + iter]);
 
 
         double intermediate_var = weights * (qk_tilde[iter] - qi_tilde[iter]);
@@ -457,7 +465,7 @@ __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldat
     }
 }
 
-__global__ void q_var_derivatives_update_innerloop_cuda(Point* globaldata, TempqDers* tempdq, dim3 thread_dim)
+__global__ void q_var_derivatives_update_innerloop_cuda(Point* globaldata, TempqDers* tempdq, dim3 thread_dim, double* dq1, double* dq2)
 {
     int bx = blockIdx.x;
     int tx = threadIdx.x;
@@ -466,8 +474,8 @@ __global__ void q_var_derivatives_update_innerloop_cuda(Point* globaldata, Tempq
     #pragma unroll 
     for(int iter=0; iter<4; iter++)
     {
-        globaldata[idx].dq1[iter] = tempdq[idx].dq1[iter];
-        globaldata[idx].dq2[iter] = tempdq[idx].dq2[iter];
+        dq1[idx*4 + iter] = tempdq[idx].dq1[iter];
+        dq2[idx*4 + iter] = tempdq[idx].dq2[iter];
 
     }
 

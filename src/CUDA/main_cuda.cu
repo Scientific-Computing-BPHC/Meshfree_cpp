@@ -30,8 +30,10 @@ typedef std::vector<long double> vec_ldoub;
 bool debug_mode = true;
 
 void meshfree_solver(char* file_name, int num_iters);
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
-void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn);
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+	int* connec, double* prim, double* flux_res, double* q, double* dq1, double* dq2, double* max_q, double* min_q, double* prim_old);
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn,\
+	int* connec, double* prim, double* flux_res, double* q, double* dq1, double* dq2, double* max_q, double* min_q, double* prim_old);
 
 int main(int argc, char **argv)
 {
@@ -119,6 +121,17 @@ void meshfree_solver(char* file_name, int max_iters)
 	int* yneg_conn = new int[numPoints*20];
 	double res_old[1] = {0.0};
 
+	int* connec = new int[numPoints*20];
+
+	double* prim = new double[numPoints*4];
+	double* flux_res = new double[numPoints*4];
+	double* q = new double[numPoints*4];
+	double* dq1 = new double[numPoints*4];
+	double* dq2 = new double[numPoints*4];
+	double* max_q = new double[numPoints*4];
+	double* min_q = new double[numPoints*4];
+	double* prim_old = new double[numPoints*4];
+
 	double defprimal[4];
 	getInitialPrimitive(configData, defprimal);
 	//printPrimal(defprimal);
@@ -155,7 +168,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 		for(int i=0; i<20; i++)
 		{
-			globaldata[idx].conn[i] = connectivity[i];
+			connec[idx*20 +i] = connectivity[i];
 			// (connectivity[i]!=0) cout<<"\n non-zero connectivity \n";
 		}
 
@@ -165,14 +178,14 @@ void meshfree_solver(char* file_name, int max_iters)
 
 		for(int i=0; i<4; i++)
 		{
-			globaldata[idx].prim[i] = defprimal[i];
-			globaldata[idx].flux_res[i] = 0.0;
-			globaldata[idx].q[i] = 0.0;
-			globaldata[idx].dq1[i] = 0.0;
-			globaldata[idx].dq2[i] = 0.0;
-			globaldata[idx].max_q[i] = 0.0;
-			globaldata[idx].min_q[i] = 0.0;
-			globaldata[idx].prim_old[i] = 0.0;
+			prim[idx*4 + i] = defprimal[i];
+			flux_res[idx*4 + i] = 0.0;
+			q[idx*4 + i] = 0.0;
+			dq1[idx*4 + i] = 0.0;
+			dq2[idx*4 + i] = 0.0;
+			max_q[idx*4 + i] = 0.0;
+			min_q[idx*4 + i] = 0.0;
+			prim_old[idx*4 + i] = 0.0;
 		}
 
 		globaldata[idx].xpos_nbhs = 0;
@@ -224,7 +237,7 @@ void meshfree_solver(char* file_name, int max_iters)
 
 		for(int i=0; i<20; i++)
 		{
-			globaldata[idx].conn[i] = connectivity[i];
+			connec[idx*20 +i] = connectivity[i];
 			// (connectivity[i]!=0) cout<<"\n non-zero connectivity \n";
 		}
 
@@ -234,14 +247,14 @@ void meshfree_solver(char* file_name, int max_iters)
 
 		for(int i=0; i<4; i++)
 		{
-			globaldata[idx].prim[i] = defprimal[i];
-			globaldata[idx].flux_res[i] = 0.0;
-			globaldata[idx].q[i] = 0.0;
-			globaldata[idx].dq1[i] = 0.0;
-			globaldata[idx].dq2[i] = 0.0;
-			globaldata[idx].max_q[i] = 0.0;
-			globaldata[idx].min_q[i] = 0.0;
-			globaldata[idx].prim_old[i] = 0.0;
+			prim[idx*4 + i] = defprimal[i];
+			flux_res[idx*4 + i] = 0.0;
+			q[idx*4 + i] = 0.0;
+			dq1[idx*4 + i] = 0.0;
+			dq2[idx*4 + i] = 0.0;
+			max_q[idx*4 + i] = 0.0;
+			min_q[idx*4 + i] = 0.0;
+			prim_old[idx*4 + i] = 0.0;
 		}
 
 		globaldata[idx].xpos_nbhs = 0;
@@ -316,7 +329,7 @@ void meshfree_solver(char* file_name, int max_iters)
         for(int i=0; i<numPoints; i++)
         {
         	for(int j=0; j<4; j++)
-        		globaldata[i].prim[j] = result_doub[i][5+j];
+        		prim[i*4 + j] = result_doub[i][5+j];
         }
     }
 
@@ -335,13 +348,13 @@ void meshfree_solver(char* file_name, int max_iters)
 	cout<<"\n-----Start Connectivity Generation-----\n";
 
 	for(int idx=0; idx<numPoints; idx++)
-		calculateConnectivity(globaldata, idx, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+		calculateConnectivity(globaldata, idx, xpos_conn, xneg_conn, ypos_conn, yneg_conn, connec);
 
 	cout<<"\n-----Connectivity Generation Done-----\n";  
 
 	cout<<"\n"<<max_iters+1<<endl;
 
-	test_code(globaldata, configData, res_old, numPoints, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+	test_code(globaldata, configData, res_old, numPoints, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn, connec, prim, flux_res, q, dq1, dq2, max_q, min_q, prim_old); 
 
 
 	cout<<"\n--------Done--------\n"<<endl;
@@ -349,7 +362,8 @@ void meshfree_solver(char* file_name, int max_iters)
 }	
 
 
-void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
+void run_code(Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+	int* connec, double* prim, double* flux_res, double* q, double* dq1, double* dq2, double* max_q, double* min_q, double* prim_old)
 {
 	auto begin = std::chrono::high_resolution_clock::now();
 	// I'M ASSUMING IN FORTRAN ALSO THEY MEASURE THE COPY TIME AND NOT JUST COMPUTATION TIME. Just doesn't make sense to ignore copy time, although it won't be too huge
@@ -362,7 +376,11 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
     unsigned int mem_size_C = sizeof(double);
 	unsigned int mem_size_D = sizeof(double) * numPoints;
 	unsigned int mem_size_E = sizeof(int) * 20 * numPoints;
+	unsigned int mem_size_F = sizeof(double) * 4 * numPoints;
 	int* xpos_conn_d, *xneg_conn_d, *ypos_conn_d, *yneg_conn_d;
+	int* connec_d;
+	double* prim_d, *flux_res_d, *q_d, *dq1_d, *dq2_d, *max_q_d, *min_q_d, *prim_old_d;
+
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&globaldata_d), mem_size_A));
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&tempdq_d), mem_size_B)); 
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&res_old_d), mem_size_C));
@@ -371,6 +389,15 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&xneg_conn_d), mem_size_E));
 	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&ypos_conn_d), mem_size_E));
 	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&yneg_conn_d), mem_size_E));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&connec_d), mem_size_E));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&prim_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&flux_res_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&q_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&dq1_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&dq2_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&max_q_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&min_q_d), mem_size_F));
+	checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&prim_old_d), mem_size_F));
 	checkCudaErrors(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
 
     double* res_sqr = new double[numPoints];
@@ -382,11 +409,20 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	checkCudaErrors(cudaMemcpyAsync(xneg_conn_d, xneg_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
 	checkCudaErrors(cudaMemcpyAsync(ypos_conn_d, ypos_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
 	checkCudaErrors(cudaMemcpyAsync(yneg_conn_d, yneg_conn, mem_size_E, cudaMemcpyHostToDevice, stream));  
+	checkCudaErrors(cudaMemcpyAsync(connec_d, connec, mem_size_E, cudaMemcpyHostToDevice, stream)); 
+	checkCudaErrors(cudaMemcpyAsync(prim_d, prim, mem_size_F, cudaMemcpyHostToDevice, stream)); 
+	checkCudaErrors(cudaMemcpyAsync(flux_res_d, flux_res, mem_size_F, cudaMemcpyHostToDevice, stream));
+	checkCudaErrors(cudaMemcpyAsync(q_d, q, mem_size_F, cudaMemcpyHostToDevice, stream));
+	checkCudaErrors(cudaMemcpyAsync(dq1_d, dq1, mem_size_F, cudaMemcpyHostToDevice, stream));
+	checkCudaErrors(cudaMemcpyAsync(dq2_d, dq2, mem_size_F, cudaMemcpyHostToDevice, stream));
+	checkCudaErrors(cudaMemcpyAsync(max_q_d, max_q, mem_size_F, cudaMemcpyHostToDevice, stream));
+	checkCudaErrors(cudaMemcpyAsync(min_q_d, min_q, mem_size_F, cudaMemcpyHostToDevice, stream));
+	checkCudaErrors(cudaMemcpyAsync(prim_old_d, prim_old, mem_size_F, cudaMemcpyHostToDevice, stream));
 	
 	for (int i=0; i<max_iters; i++)
 	{
 		fpi_solver(i, globaldata_d, configData, res_old_d, res_sqr_d, numPoints, tempdq_d, stream, res_old, res_sqr, mem_size_C, mem_size_D, \
-			xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d);
+			xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d, connec_d, prim_d, flux_res_d, q_d, dq1_d, dq2_d, max_q_d, min_q_d, prim_old_d); 
 
 	}
 	auto end = std::chrono::high_resolution_clock::now();
@@ -394,7 +430,8 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	printf("\nTime measured: %.5f seconds.\n", elapsed.count() * 1e-9);
 	// Copy from device to host, and free the device memory
 	checkCudaErrors(cudaMemcpyAsync(globaldata, globaldata_d, mem_size_A, cudaMemcpyDeviceToHost, stream));
-    checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
+	checkCudaErrors(cudaMemcpyAsync(tempdq, tempdq_d, mem_size_B, cudaMemcpyDeviceToHost, stream));
+	// Do we wanna copy more stuff here? ...
     checkCudaErrors(cudaFree(globaldata_d)); 
     checkCudaErrors(cudaFree(tempdq_d));
     checkCudaErrors(cudaFree(res_old_d));
@@ -403,10 +440,21 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
 	checkCudaErrors(cudaFree(xneg_conn_d));
 	checkCudaErrors(cudaFree(ypos_conn_d));
 	checkCudaErrors(cudaFree(yneg_conn_d));
+	checkCudaErrors(cudaFree(connec_d));
+	checkCudaErrors(cudaFree(prim_d));
+	checkCudaErrors(cudaFree(flux_res_d));
+	checkCudaErrors(cudaFree(q_d));
+	checkCudaErrors(cudaFree(dq1_d));
+	checkCudaErrors(cudaFree(dq2_d));
+	checkCudaErrors(cudaFree(max_q_d));
+	checkCudaErrors(cudaFree(min_q_d));
+	checkCudaErrors(cudaFree(prim_old_d));
+
 }
 
 
-void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn)
+void test_code(Point* globaldata, Config configData, double res_old[1], int numPoints, int max_iters, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+int* connec, double* prim, double* flux_res, double* q, double* dq1, double* dq2, double* max_q, double* min_q, double* prim_old)
 {
 	cout<<"\nStarting warmup function \n";
 	res_old[0] = 0.0;
@@ -417,6 +465,6 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 	for (int i=0; i<numPoints; i++)
 		tempdq[i].setTempdq();
 
-	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn, connec, prim, flux_res, q, dq1, dq2, max_q, min_q, prim_old); 
 
 }

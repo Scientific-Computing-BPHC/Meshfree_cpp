@@ -11,7 +11,7 @@ bool isNan(Type var)
 }
 
 __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result, double* sig_del_x_del_f, \
-	double* sig_del_y_del_f,  double* qtilde_i, double* qtilde_k, Config configData, int* xpos_conn)
+	double* sig_del_y_del_f,  double* qtilde_i, double* qtilde_k, Config configData, int* xpos_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 	
     double power = configData.core.power;
@@ -51,7 +51,7 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
 
 		connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, delta_x, delta_y, delta_s_weights, delta_n_weights);
 
-		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
@@ -74,7 +74,7 @@ __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* 
 }
 
 __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double* result, double* sig_del_x_del_f, \
-	double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData, int* xneg_conn)
+	double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData, int* xneg_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
     double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
@@ -113,7 +113,7 @@ __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
 
 		connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, delta_x, delta_y, delta_s_weights, delta_n_weights);
 
-		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
@@ -136,7 +136,7 @@ __device__  void wall_dGx_neg(Point* globaldata, int idx, double Gxn[4], double*
 }
 
 __device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, \
-	 double* qtilde_i, double* qtilde_k, Config configData, int* yneg_conn)
+	 double* qtilde_i, double* qtilde_k, Config configData, int* yneg_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
@@ -174,7 +174,7 @@ __device__ void wall_dGy_neg(Point* globaldata, int idx, double Gyn[4], double* 
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
 		connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y, delta_x, delta_y, delta_s_weights, delta_n_weights);
 
-		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
