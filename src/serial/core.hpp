@@ -53,25 +53,25 @@ struct Point
 	int flag_1, flag_2; // Int8 in the Julia code
 	double short_distance;
 	int nbhs;
-	int conn[20];
+	// int conn[20];
 	double nx, ny;
 	// Size 4 (Pressure, vx, vy, density) x numberpts
 	double prim[4];
-	double flux_res[4];
-	double q[4];
+	// double flux_res[4];
+	// double q[4];
 	// Size 2(x,y) 4(Pressure, vx, vy, density) numberpts
-	double dq1[4];
-	double dq2[4];
+	// double dq1[4];
+	// double dq2[4];
 	double entropy;
 	int xpos_nbhs, xneg_nbhs, ypos_nbhs, yneg_nbhs;
-	int xpos_conn[20];
-	int xneg_conn[20];
-	int ypos_conn[20];
-	int yneg_conn[20];
+	// int xpos_conn[20];
+	// int xneg_conn[20];
+	// int ypos_conn[20];
+	// int yneg_conn[20];
 	double delta;
-	double max_q[4];
-	double min_q[4];
-	double prim_old[4];
+	// double max_q[4];
+	// double min_q[4];
+	// double prim_old[4];
 
 	//Point Constructor
 
@@ -207,15 +207,16 @@ void placeNormals(Point* globaldata, int idx, Config configData, long long inter
 
 xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my);
 
-void calculateConnectivity(Point* globaldata, int idx);
+void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, int* connec);
 
-void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq);
+void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1], int numPoints, TempqDers* tempdq, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
+	int* connec, double* prim, double* flux_res, double* q, double* dq1, double* dq2, double* max_q, double* min_q, double* prim_old);
 
-void q_variables(Point* globaldata, int numPoints);
+void q_variables(Point* globaldata, int numPoints, double* prim, double* q);
 
-void q_var_derivatives(Point* globaldata, int numPoints, double power);
+void q_var_derivatives(Point* globaldata, int numPoints, double power, double* q, double* dq1, double* dq2, int* connec, double* max_q, double* min_q);
 
-void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, TempqDers* tempdq);
+void q_var_derivatives_innerloop(Point* globaldata, int numPoints, double power, TempqDers* tempdq, int* connec, double* q, double* dq1, double* dq2);
 
 template <class Type>
 bool isNan(Type var);

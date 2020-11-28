@@ -1,7 +1,7 @@
 #include "state_update.hpp"
 
-inline void primitive_to_conserved(double globaldata_prim[4], double nx, double ny, double U[4]);
-inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double ny, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double Ubar[4]);
+inline void primitive_to_conserved(double globaldata_prim[4], double nx, double ny, double U[4], int idx);
+inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double ny, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double Ubar[4], int idx);
 
 template <class Type>
 bool isNan(Type var)
@@ -10,17 +10,17 @@ bool isNan(Type var)
     return false;
 }
 
-void func_delta(Point* globaldata, int numPoints, double cfl)
+void func_delta(Point* globaldata, int numPoints, double cfl, int* connec, double* prim, double* prim_old)
 {
 	for(int idx=0; idx<numPoints; idx++)
 	{
 		double min_delt = 1.0;
 		for(int i=0; i<20; i++)
 		{
-			int conn = globaldata[idx].conn[i];
+			int conn = connec[idx*20 + i];
 			if (conn == 0) break;
 
-            conn = conn -1; // To account for the indexing difference b/w Julia and C++
+            conn = conn -1; 
 
 			double x_i = globaldata[idx].x;
 			double y_i = globaldata[idx].y;
@@ -28,19 +28,19 @@ void func_delta(Point* globaldata, int numPoints, double cfl)
 			double y_k = globaldata[conn].y;
 
 			double dist = hypot((x_k - x_i), (y_k - y_i));
-			double mod_u = hypot(globaldata[conn].prim[1], globaldata[conn].prim[2]);
-			double delta_t = dist/(mod_u + 3*sqrt(globaldata[conn].prim[3]/globaldata[conn].prim[0]));
+			double mod_u = hypot(prim[conn*4 + 1], prim[conn*4 + 2]);
+			double delta_t = dist/(mod_u + 3*sqrt(prim[conn*4 + 3]/prim[conn*4 + 0]));
 			delta_t *= cfl;
 			if (min_delt > delta_t)
 				min_delt = delta_t;
 		}
 		globaldata[idx].delta = min_delt;
 		for(int i=0; i<4; i++)
-			globaldata[idx].prim_old[i] = globaldata[idx].prim[i];
+			prim_old[idx*4 + i] = prim[idx*4 + i];
 	}
 }
 
-void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks)
+void state_update(Point* globaldata, int numPoints, Config configData, int iter, double res_old[1], int rk, int rks, double* prim, double* prim_old, double* flux_res)
 {
 	double max_res = 0.0;
 	double sig_res_sqr[1];
@@ -64,7 +64,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
+			state_update_wall(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler, prim, prim_old, flux_res);
 		}
 		else if(globaldata[idx].flag_1 == 2)
 		{
@@ -72,7 +72,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk, euler);
+			state_update_outer(globaldata, idx, Mach, gamma, pr_inf, rho_inf, theta, max_res, sig_res_sqr, U, Uold, rk, euler, prim, prim_old, flux_res);
 		}
 		else if(globaldata[idx].flag_1 == 1)
 		{
@@ -80,7 +80,7 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 			{
 				U[i] = 0.0;
             }
-			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler);
+			state_update_interior(globaldata, idx, max_res, sig_res_sqr, U, Uold, rk, euler, prim, prim_old, flux_res);
 		}
 	}
 
@@ -99,19 +99,20 @@ void state_update(Point* globaldata, int numPoints, Config configData, int iter,
 		cout<<std::fixed<<std::setprecision(17)<<"\nResidue: "<<iter+1<<" "<<residue<<endl;
 }
 
-void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
+void state_update_wall(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler, \
+                    double* prim, double* prim_old, double* flux_res)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
 
-    primitive_to_conserved(globaldata[idx].prim, nx, ny, U);
-    primitive_to_conserved(globaldata[idx].prim_old, nx, ny, Uold);
+    primitive_to_conserved(prim, nx, ny, U, idx);
+    primitive_to_conserved(prim_old, nx, ny, Uold, idx);
 
     double temp = U[0];
 
     for (int iter=0; iter<4; iter++)
     {
-        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * flux_res[idx*4 + iter];
     }
 
     if (rk == 2)
@@ -135,21 +136,24 @@ void state_update_wall(Point* globaldata, int idx, double max_res, double sig_re
     Uold[3] = (0.4*U[3]) - ((0.2 * temp) * (U[1] * U[1] + U[2] * U[2]));
     for(int i=0; i<4; i++)
     {
-    	globaldata[idx].prim[i] = Uold[i];
+    	prim[idx*4 + i] = Uold[i];
     }
 }
 
-void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
+void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, \
+                    double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler, double* prim, double* prim_old, double* flux_res)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
 
-    conserved_vector_Ubar(globaldata[idx].prim, nx, ny, Mach, gamma, pr_inf, rho_inf, theta, U);
-    conserved_vector_Ubar(globaldata[idx].prim_old, nx, ny, Mach, gamma, pr_inf, rho_inf, theta, Uold);
+    conserved_vector_Ubar(prim, nx, ny, Mach, gamma, pr_inf, rho_inf, theta, U, idx);
+    conserved_vector_Ubar(prim_old, nx, ny, Mach, gamma, pr_inf, rho_inf, theta, Uold, idx);
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
+    {
+        U[iter] = U[iter] - 0.5 * euler * flux_res[idx*4 + iter];
+    }
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
@@ -170,21 +174,22 @@ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, d
     Uold[3] = (0.4*U[3]) - ((0.2 * temp) * (U[1] * U[1] + U[2] * U[2]));
     for(int i=0; i<4; i++)
     {
-    	globaldata[idx].prim[i] = Uold[i];
+    	prim[idx*4 + i] = Uold[i];
     }
 }
 
-void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler)
+void state_update_interior(Point* globaldata, int idx, double max_res, double sig_res_sqr[1], double U[4], double Uold[4], int rk, int euler, \ 
+                        double* prim, double* prim_old, double* flux_res)
 {
     double nx = globaldata[idx].nx;
     double ny = globaldata[idx].ny;
 
-    primitive_to_conserved(globaldata[idx].prim, nx, ny, U);
-    primitive_to_conserved(globaldata[idx].prim_old, nx, ny, Uold);
+    primitive_to_conserved(prim, nx, ny, U, idx);
+    primitive_to_conserved(prim_old, nx, ny, Uold, idx);
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
-        U[iter] = U[iter] - 0.5 * euler * globaldata[idx].flux_res[iter];
+        U[iter] = U[iter] - 0.5 * euler * flux_res[idx*4 + iter];
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
@@ -205,22 +210,22 @@ void state_update_interior(Point* globaldata, int idx, double max_res, double si
     Uold[3] = (0.4*U[3]) - ((0.2 * temp) * (U[1] * U[1] + U[2] * U[2]));
     for(int i=0; i<4; i++)
     {
-    	globaldata[idx].prim[i] = Uold[i];
+    	prim[idx*4 + i] = Uold[i];
     }
 }
 
-inline void primitive_to_conserved(double globaldata_prim[4], double nx, double ny, double U[4])
+inline void primitive_to_conserved(double* prim, double nx, double ny, double U[4], int idx)
 {
-	double rho = globaldata_prim[0];
+	double rho = prim[idx*4 + 0];
     U[0] = rho;
-    double temp1 = rho * globaldata_prim[1];
-    double temp2 = rho * globaldata_prim[2];
+    double temp1 = rho * prim[idx*4 + 1];
+    double temp2 = rho * prim[idx*4 + 2];
     U[1] = temp1*ny - temp2*nx;
     U[2] = temp1*nx + temp2*ny;
-    U[3] = 2.5*globaldata_prim[3] + 0.5*(temp1*temp1 + temp2*temp2)/rho;
+    U[3] = 2.5*prim[idx*4 + 3] + 0.5*(temp1*temp1 + temp2*temp2)/rho;
 }
 
-inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double ny, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double Ubar[4])
+inline void conserved_vector_Ubar(double* prim, double nx, double ny, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double Ubar[4], int idx)
 {
 	double u1_inf = Mach*cos(theta);
     double u2_inf = Mach*sin(theta);
@@ -239,10 +244,10 @@ inline void conserved_vector_Ubar(double globaldata_prim[4], double nx, double n
     double B2_inf = exp(-S2*S2)/(2.0*sqrt(M_PI*beta));
     double A2n_inf = 0.5 * (1 - erf(S2));
 
-    double rho = globaldata_prim[0];
-    double u1 = globaldata_prim[1];
-    double u2 = globaldata_prim[2];
-    double pr = globaldata_prim[3];
+    double rho = prim[idx*4 + 0];
+    double u1 = prim[idx*4 + 1];
+    double u2 = prim[idx*4 + 2];
+    double pr = prim[idx*4 + 3];
 
     double u1_rot = u1*tx + u2*ty;
     double u2_rot = u1*nx + u2*ny;

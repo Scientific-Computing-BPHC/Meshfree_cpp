@@ -3,7 +3,7 @@
 #include "quadrant_fluxes.hpp"
 #include "split_fluxes.hpp"
 
-void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
+void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData, int* xpos_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
@@ -33,7 +33,7 @@ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].xpos_conn[i];
+		int conn = xpos_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -41,7 +41,7 @@ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
 		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
 
-		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
@@ -61,7 +61,7 @@ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
 	
 }
 
-void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
+void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData, int* xneg_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -91,7 +91,7 @@ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].xneg_conn[i];
+		int conn = xneg_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -99,7 +99,7 @@ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
 		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
 
-		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
@@ -119,7 +119,7 @@ void outer_dGx_neg(Point* globaldata, int idx, double Gxn[4], Config configData)
 
 }
 
-void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData)
+void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData, int* ypos_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
@@ -149,7 +149,7 @@ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData)
 
 	for(int i=0; i<20; i++)
 	{
-		int conn = globaldata[idx].ypos_conn[i];
+		int conn = ypos_conn[idx*20 + i];
 		if(conn == 0) break;
 
 		conn = conn - 1;
@@ -157,7 +157,7 @@ void outer_dGy_pos(Point* globaldata, int idx, double Gyp[4], Config configData)
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
 		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
 
-		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k);
+		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 

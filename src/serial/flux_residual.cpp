@@ -11,53 +11,50 @@ bool isNan(Type var)
     return false;
 }
 
-void cal_flux_residual(Point* globaldata, int numPoints, Config configData)
+void cal_flux_residual(Point* globaldata, int numPoints, Config configData, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, double* flux_res, \
+	double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 
 	double Gxp[4] = {0}, Gxn[4] = {0}, Gyp[4] = {0}, Gyn[4] = {0};
-
 	for(int idx=0; idx<numPoints; idx++)
 	{
-
 		if (globaldata[idx].flag_1 == 0)
-			wallindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
+			wallindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData, \
+				xpos_conn, xneg_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);
+
 		else if (globaldata[idx].flag_1 == 2)
-			outerindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
+			outerindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData, \
+				xpos_conn, xneg_conn, ypos_conn, flux_res, q, max_q, min_q, dq1, dq2);
+
 		else if (globaldata[idx].flag_1 == 1)
-			interiorindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData);
+			interiorindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, configData, \
+				xpos_conn, xneg_conn, ypos_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);
 
 	}
 }
 
-void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
+void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData, \
+	int* xpos_conn, int* xneg_conn, int* yneg_conn, double* flux_res, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 
+	wall_dGx_pos(globaldata, idx, Gxp,  configData, xpos_conn, q, max_q, min_q, dq1, dq2);
+	wall_dGx_neg(globaldata, idx, Gxn,  configData, xneg_conn, q, max_q, min_q, dq1, dq2);
+	wall_dGy_neg(globaldata, idx, Gyn,  configData, yneg_conn, q, max_q, min_q, dq1, dq2);
 
-	wall_dGx_pos(globaldata, idx, Gxp, configData);
-	wall_dGx_neg(globaldata, idx, Gxn, configData);
-	wall_dGy_neg(globaldata, idx, Gyn, configData);
-
-	double Gtemp[4] = {0};
 
 	for(int i=0; i<4; i++)
-	{
-		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
-	}
+		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
 
-	for(int i=0; i<4; i++)
-	{
-		globaldata[idx].flux_res[i] = Gtemp[i];
-	}
 }
 
-void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
+void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData, \
+	int* xpos_conn, int* xneg_conn, int* ypos_conn, double* flux_res, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
 
-	outer_dGx_pos(globaldata, idx, Gxp, configData);
-	outer_dGx_neg(globaldata, idx, Gxn, configData);
-	outer_dGy_pos(globaldata, idx, Gyp, configData);
+	outer_dGx_pos(globaldata, idx, Gxp, configData, xpos_conn, q, max_q, min_q, dq1, dq2);
+	outer_dGx_neg(globaldata, idx, Gxn, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
+	outer_dGy_pos(globaldata, idx, Gyp, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
 
-	double Gtemp[4] = {0};
 
 	// if(idx == 1356)
 	// {
@@ -84,25 +81,20 @@ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], doubl
  //    }
 
 	for(int i=0; i<4; i++)
-		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i]);
-
-	for(int i=0; i<4; i++)
-		globaldata[idx].flux_res[i] = Gtemp[i];
+		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i]);
 
 }
 
-void interiorindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)
+void interiorindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData, \
+	int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, double* flux_res, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
-	interior_dGx_pos(globaldata, idx, Gxp, configData);
-	interior_dGx_neg(globaldata, idx, Gxn, configData);
-	interior_dGy_pos(globaldata, idx, Gyp, configData);
-	interior_dGy_neg(globaldata, idx, Gyn, configData); 
+	interior_dGx_pos(globaldata, idx, Gxp, configData, xpos_conn, q, max_q, min_q, dq1, dq2);
+	interior_dGx_neg(globaldata, idx, Gxn, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
+	interior_dGy_pos(globaldata, idx, Gyp, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
+	interior_dGy_neg(globaldata, idx, Gyn, configData, yneg_conn, q, max_q, min_q, dq1, dq2); 
 
-	double Gtemp[4] = {0};
-
-	for(int i=0; i<4; i++)
-		Gtemp[i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);
 
 	for(int i=0; i<4; i++)
-		globaldata[idx].flux_res[i] = Gtemp[i];
+		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i] + Gyn[i]);
+
 }
