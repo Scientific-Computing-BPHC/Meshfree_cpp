@@ -5,7 +5,8 @@ Scientific Computing @ BITS Pilani - Hyderabad Campus.
 Development of a meshfree solver for inviscid compressible fluid flows in C++. The meshfree solver is based on the Least Squares
 Kinetic Upwind Method (q-LSKUM), developed by Deshpande et. al. 
 
-This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Assistant Professor, Department of Mathematics, BITS Pilani - Hyderabad Campus, and Professor S.M. Deshpande, JNCASR. 
+This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guidance of Dr. N. Anil, Assistant Professor, Department of Mathematics, BITS Pilani - Hyderabad Campus, and Professor S.M. Deshpande, Jawaharlal
+Nehru Centre for Advanced Scientific Research. 
 
 ## Dependencies:
 * gcc 8.3.0 or higher
@@ -24,8 +25,7 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 +-- Meshfree_cpp
 |   +-- src
 |       +-- serial
-|           +-- clean_main.cpp
-|           +-- clean_main.hpp
+|           +-- main.cpp
 |           +-- core.cpp
 |           +-- core.hpp
 |           +-- utils.cpp
@@ -75,16 +75,11 @@ This work is done as part of my M.Sc. (Hons.) Mathematics Thesis, under the guid
 ## Roadmap:
 
 - [x] Serial Primal Code
-- [x] Profile Serial Primal
 - [X] Primal CUDA Parallel Version v1 
-- [ ] Primal CUDA Parallel Version v2 
+- [X] Primal CUDA Parallel Version v2 
     - [X] Reductions
-    - [ ] Shared Memory
-    - [ ] CUDA Graphs
-- [ ] Serial Adjoint Code with CoDiPack
-- [ ] Optimize and Benchmark Serial Primal once again
-- [ ] CUDAfy CoDiPack based Adjoint Solver
-- [ ] Begin 3D Serial Primal (stretch goal for thesis)
+    - [X] Shared Memory
+    - [X] CUDA Graphs
 
 ## Support:
 
