@@ -49,6 +49,7 @@ __device__ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp
 	wall_dGy_neg(globaldata, idx, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, yneg_conn, q, max_q, min_q, dq1, dq2);
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i + 4*threadIdx.x] + Gyn[i+ 4*threadIdx.x]) * 2;
+}
 
 __device__ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], \
 	double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData, \
