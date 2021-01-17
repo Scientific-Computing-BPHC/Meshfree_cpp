@@ -60,7 +60,7 @@ void placeNormals(Point* globaldata, int idx, Config configData, long long inter
 xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my)
 {
 	double lx = std::get<0>(left);
-	double ly = std::get<1>(left)
+	double ly = std::get<1>(left);
 	double rx = std::get<0>(right);
 	double ry = std::get<1>(right);
 	double nx1 = my - ly;
