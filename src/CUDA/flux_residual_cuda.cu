@@ -56,20 +56,8 @@ __device__ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp
 	wall_dGx_neg(globaldata, idx, Gxn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
 	wall_dGy_neg(globaldata, idx, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, yneg_conn, q, max_q, min_q, dq1, dq2);
 
-	//double Gtemp[4] = {0};
-
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i + 4*threadIdx.x] + Gyn[i+ 4*threadIdx.x]) * 2;
-
-	// if(idx ==0)
-	// {
-	// 	printf("\n");
-	// 	for(int index = 0; index<4; index++)
-	// 	{
-	// 		printf("%.17f   ", flux_res[idx*4 + index]);
-	// 	}
-	// }
-}
 
 __device__ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], \
 	double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData, \
@@ -80,13 +68,8 @@ __device__ void outerindices_flux_residual(Point* globaldata, int idx, double Gx
 	outer_dGx_neg(globaldata, idx, Gxn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
 	outer_dGy_pos(globaldata, idx, Gyp, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
 
-	//double Gtemp[4] = {0};
-
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i+ 4*threadIdx.x] + Gyp[i+ 4*threadIdx.x]);
-
-	// for(int i=0; i<4; i++)
-	// 	globaldata[idx].flux_res[i] = Gtemp[i];
 
 }
 
@@ -99,11 +82,7 @@ __device__ void interiorindices_flux_residual(Point* globaldata, int idx, double
 	interior_dGy_pos(globaldata, idx, Gyp, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
 	interior_dGy_neg(globaldata, idx, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, yneg_conn, q, max_q, min_q, dq1, dq2); 
 
-	// double Gtemp[4] = {0};
-
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i + 4*threadIdx.x] + Gyp[i+ 4*threadIdx.x] + Gyn[i+ 4*threadIdx.x]);
 
-	// for(int i=0; i<4; i++)
-	// 	globaldata[idx].flux_res[i] = Gtemp[i];
 }
