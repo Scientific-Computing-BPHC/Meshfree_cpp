@@ -75,8 +75,8 @@ Nehru Centre for Advanced Scientific Research.
 ## Roadmap:
 
 - [x] Serial Primal Meshfree Solver
-- [X] CUDA Parallel Version Primal Solver v1 
-- [X] CUDA Parallel Version Primal Solver v2 
+- [X] CUDA Parallel Primal Solver Version v1 
+- [X] CUDA Parallel Primal Solver Version v2 
     - [X] Reductions
     - [X] Shared Memory
     - [X] CUDA Graphs
