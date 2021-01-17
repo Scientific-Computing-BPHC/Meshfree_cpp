@@ -112,13 +112,11 @@ void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg
         itm = itm + 1; // to reaccount for indexing when we add the point below xpos_conn[xpos_nbhs] = itm;
     	if(delta_s <= 0.0)
     	{
-    		
     		xpos_conn_tmp[xpos_nbhs] = itm;
             xpos_nbhs+=1;
     	}
     	if(delta_s >= 0.0)
     	{
-    		
     		xneg_conn_tmp[xneg_nbhs] = itm;
             xneg_nbhs+=1;
     	}
@@ -126,26 +124,22 @@ void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg
     	{
     		if(delta_n<=0.0)
     		{
-    			
     			ypos_conn_tmp[ypos_nbhs] = itm;
                 ypos_nbhs+=1;
     		}
     		if(delta_n>=0.0)
-    		{
-    			
+    		{	
     			yneg_conn_tmp[yneg_nbhs] = itm;
                 yneg_nbhs+=1;
     		}
     	}
     	else if (flag==0)
     	{
-    		
     		yneg_conn_tmp[yneg_nbhs] = itm;
             yneg_nbhs+=1;
     	}
     	else if (flag==2)
     	{
-    		
     		ypos_conn_tmp[ypos_nbhs] = itm;
             ypos_nbhs+=1;
     	}
