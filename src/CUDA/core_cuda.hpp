@@ -146,7 +146,7 @@ struct Config
 		core.shapes = 1.0;
 		core.rho_inf = 1.0;
 		core.pr_inf = 0.7142857142857142;
-		core.threadsperblock = 32; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
+		core.threadsperblock = 64; // I've *statically* defined the shared memory in flux_res and associated kernels based on this number. Gotta manually change that to reflect any changes here
 		core.gamma = 1.4;
 		core.clcd_flag = 0;
 		core.tscheme = "ssprk43";
@@ -221,7 +221,7 @@ double* res_old_d, double* res_sqr_d, int iter, int rk, int rks, dim3 threads, d
 double* res_sqr, unsigned int mem_size_C, unsigned int mem_size_D, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
 int* connec_d, double* prim_d, double* flux_res_d, double* q_d, double* dq1_d, double* dq2_d, double* max_q_d, double* min_q_d, double* prim_old_d);
 
-__global__ void q_variables_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim, double* prim, double* q);
+__global__ void q_variables_cuda(Point* globaldata, int numPoints, dim3 thread_dim, double* prim, double* q);
 
 __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double power, dim3 thread_dim, double* q, double* dq1, double* dq2, int* connec, double* max_q, double* min_q);
 

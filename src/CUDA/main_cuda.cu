@@ -426,5 +426,4 @@ int* connec, double* prim, double* flux_res, double* q, double* dq1, double* dq2
 		tempdq[i].setTempdq();
 	/* Run Meshfree Code */
 	run_code(globaldata, configData, res_old, numPoints, tempdq, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn, connec, prim, flux_res, q, dq1, dq2, max_q, min_q, prim_old); 
-
 }

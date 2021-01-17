@@ -18,16 +18,16 @@ __global__ void cal_flux_residual_cuda(Point* globaldata, int numPoints, Config 
     int threadx = threadIdx.x;
     int idx = bx*thread_dim.x + threadx;
 
-	__shared__ double Gxp[4*32];
-	__shared__ double Gxn[4*32];
-	__shared__ double Gyp[4*32];
-	__shared__ double Gyn[4*32];
+	__shared__ double Gxp[4*64];
+	__shared__ double Gxn[4*64];
+	__shared__ double Gyp[4*64];
+	__shared__ double Gyn[4*64];
 
-	__shared__ double result[4*32];
-	__shared__ double sig_del_x_del_f[4*32];
-	__shared__ double sig_del_y_del_f[4*32];
-	__shared__ double qtilde_i[4*32];
-	__shared__ double qtilde_k[4*32];
+	__shared__ double result[4*64];
+	__shared__ double sig_del_x_del_f[4*64];
+	__shared__ double sig_del_y_del_f[4*64];
+	__shared__ double qtilde_i[4*64];
+	__shared__ double qtilde_k[4*64];
 
 	if(idx < numPoints)
 	{
@@ -39,6 +39,7 @@ __global__ void cal_flux_residual_cuda(Point* globaldata, int numPoints, Config 
 		else if (globaldata[idx].flag_1 == 2)
 			outerindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, \
 			xpos_conn, xneg_conn, ypos_conn, flux_res, q, max_q, min_q, dq1, dq2);
+			
 		else if (globaldata[idx].flag_1 == 1)
 			interiorindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, \
 				xpos_conn, xneg_conn, ypos_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);
@@ -60,9 +61,13 @@ __device__ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i + 4*threadIdx.x] + Gyn[i+ 4*threadIdx.x]) * 2;
 
-	// for(int i=0; i<4; i++)
+	// if(idx ==0)
 	// {
-	// 	globaldata[idx].flux_res[i] = Gtemp[i];
+	// 	printf("\n");
+	// 	for(int index = 0; index<4; index++)
+	// 	{
+	// 		printf("%.17f   ", flux_res[idx*4 + index]);
+	// 	}
 	// }
 }
 

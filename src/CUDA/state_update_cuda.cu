@@ -17,7 +17,7 @@ __global__ void call_func_delta_cuda(Point* globaldata, int numPoints, double cf
 			int conn = connec[idx*20 + i];
 			if (conn == 0) break;
 
-            conn = conn -1; // To account for the indexing difference b/w Julia and C++
+            conn = conn -1; 
 
 			double x_i = globaldata[idx].x;
 			double y_i = globaldata[idx].y;
@@ -123,6 +123,16 @@ __device__ void state_update_wall(Point* globaldata, int idx, double max_res, do
     	prim[idx*4 + i] = Uold[i];
     }
 
+
+	// if(idx ==0)
+	// {
+	// 	printf("\n");
+	// 	for(int index = 0; index<4; index++)
+	// 	{
+	// 		printf("%.17f   ", prim[idx*4 + index]);
+	// 	}
+	// }
+
 }
 
 __device__ void state_update_outer(Point* globaldata, int idx, double Mach, double gamma, double pr_inf, double rho_inf, double theta, double max_res, double* res_sqr, \
@@ -136,13 +146,15 @@ __device__ void state_update_outer(Point* globaldata, int idx, double Mach, doub
 
     double temp = U[0];
     for (int iter=0; iter<4; iter++)
+    {
         U[iter] = U[iter] - 0.5 * euler * flux_res[idx*4 + iter];
+    }
     if (rk == 2)
     {
         for (int iter=0; iter<4; iter++)
             U[iter] = U[iter] * ((double)1.0)/3.0 + Uold[iter] * ((double)2.0)/3.0;
     }
-    //U[2] = 0.0;
+
     double U2_rot = U[1];
     double U3_rot = U[2];
     U[1] = U2_rot*ny + U3_rot*nx;
