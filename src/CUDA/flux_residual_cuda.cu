@@ -17,33 +17,26 @@ __global__ void cal_flux_residual_cuda(Point* globaldata, int numPoints, Config 
     int bx = blockIdx.x;
     int threadx = threadIdx.x;
     int idx = bx*thread_dim.x + threadx;
-
 	__shared__ double Gxp[4*32];
 	__shared__ double Gxn[4*32];
 	__shared__ double Gyp[4*32];
 	__shared__ double Gyn[4*32];
-
 	__shared__ double result[4*32];
 	__shared__ double sig_del_x_del_f[4*32];
 	__shared__ double sig_del_y_del_f[4*32];
 	__shared__ double qtilde_i[4*32];
 	__shared__ double qtilde_k[4*32];
-
 	if(idx < numPoints)
 	{
-
 		if (globaldata[idx].flag_1 == 0)
 			wallindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData,\
-				xpos_conn, xneg_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);
-			
+				xpos_conn, xneg_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);		
 		else if (globaldata[idx].flag_1 == 2)
 			outerindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, \
-			xpos_conn, xneg_conn, ypos_conn, flux_res, q, max_q, min_q, dq1, dq2);
-			
+			xpos_conn, xneg_conn, ypos_conn, flux_res, q, max_q, min_q, dq1, dq2);	
 		else if (globaldata[idx].flag_1 == 1)
 			interiorindices_flux_residual(globaldata, idx, Gxp, Gxn, Gyp, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, \
 				xpos_conn, xneg_conn, ypos_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);
-
 	}
 }
 
@@ -51,11 +44,9 @@ __device__ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp
 	double* result, double* sig_del_x_del_f, double* sig_del_y_del_f,  double* qtilde_i, double* qtilde_k, Config configData, \
 	int* xpos_conn, int* xneg_conn, int* yneg_conn, double* flux_res, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
-
 	wall_dGx_pos(globaldata, idx, Gxp, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xpos_conn, q, max_q, min_q, dq1, dq2);
 	wall_dGx_neg(globaldata, idx, Gxn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
 	wall_dGy_neg(globaldata, idx, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, yneg_conn, q, max_q, min_q, dq1, dq2);
-
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i + 4*threadIdx.x] + Gyn[i+ 4*threadIdx.x]) * 2;
 
@@ -63,11 +54,9 @@ __device__ void outerindices_flux_residual(Point* globaldata, int idx, double Gx
 	double* result, double* sig_del_x_del_f, double* sig_del_y_del_f, double* qtilde_i, double* qtilde_k, Config configData, \
 	int* xpos_conn, int* xneg_conn, int* ypos_conn, double* flux_res, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
-
 	outer_dGx_pos(globaldata, idx, Gxp, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xpos_conn, q, max_q, min_q, dq1, dq2);
 	outer_dGx_neg(globaldata, idx, Gxn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
 	outer_dGy_pos(globaldata, idx, Gyp, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
-
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i+ 4*threadIdx.x] + Gyp[i+ 4*threadIdx.x]);
 
@@ -81,7 +70,6 @@ __device__ void interiorindices_flux_residual(Point* globaldata, int idx, double
 	interior_dGx_neg(globaldata, idx, Gxn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, xneg_conn, q, max_q, min_q, dq1, dq2);
 	interior_dGy_pos(globaldata, idx, Gyp, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
 	interior_dGy_neg(globaldata, idx, Gyn, result, sig_del_x_del_f, sig_del_y_del_f, qtilde_i, qtilde_k, configData, yneg_conn, q, max_q, min_q, dq1, dq2); 
-
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i + 4*threadIdx.x] + Gxn[i + 4*threadIdx.x] + Gyp[i+ 4*threadIdx.x] + Gyn[i+ 4*threadIdx.x]);
 

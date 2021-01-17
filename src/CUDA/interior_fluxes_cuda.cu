@@ -9,26 +9,22 @@ __device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], doub
 	double sig_del_x_sqr = 0.0;
 	double sig_del_y_sqr = 0.0;
 	double sig_del_x_del_y = 0.0;
-
 	double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
-
-    double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0};
-
+	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0};
+	
 	for(int i=0; i<4; i++)
 	{
 		sig_del_x_del_f[i + 4*threadIdx.x] = 0.0;
 		sig_del_y_del_f[i + 4*threadIdx.x] = 0.0;
 	}
-
+	
 	double x_i = globaldata[idx].x;
 	double y_i = globaldata[idx].y;
-
 	double nx = globaldata[idx].nx;
 	double ny = globaldata[idx].ny;
-
 	double tx = ny;
 	double ty = -nx;
 

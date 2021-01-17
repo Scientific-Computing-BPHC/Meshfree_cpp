@@ -1,5 +1,5 @@
 #ifndef FLUX_RESIDUAL_HPP
-#define FULX_RESIDUAL_HPP
+#define FLUX_RESIDUAL_HPP
 
 __global__ void cal_flux_residual_cuda(Point* globaldata, int numPoints, Config configData, dim3 thread_dim, int* xpos_conn, int* xneg_conn, int* ypos_conn, int* yneg_conn, \
 double* flux_res, double* q, double* max_q, double* min_q, double* dq1, double* dq2);

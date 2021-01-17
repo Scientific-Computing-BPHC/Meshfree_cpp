@@ -10,7 +10,6 @@ __device__ void outer_dGx_pos(Point* globaldata, int idx, double Gxp[4], double*
     int limiter_flag = configData.core.limiter_flag;
     double vl_const = configData.core.vl_const;
     double gamma = configData.core.gamma;
-
 	double phi_i[4] ={0}, phi_k[4] = {0}, G_i[4] = {0}, G_k[4] = {0};
 	
 	double sig_del_x_sqr = 0.0;

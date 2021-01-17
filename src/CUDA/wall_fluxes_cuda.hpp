@@ -1,6 +1,7 @@
 #ifndef WALL_FLUXES_HPP
 #define WALL_FLUXES_HPP
 
+/* Internal Headers */
 #include "point.hpp"
 #include "split_fluxes_cuda.hpp"
 

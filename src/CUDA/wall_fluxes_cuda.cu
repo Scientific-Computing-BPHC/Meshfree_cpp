@@ -13,7 +13,6 @@ bool isNan(Type var)
 __device__ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], double* result, double* sig_del_x_del_f, \
 	double* sig_del_y_del_f,  double* qtilde_i, double* qtilde_k, Config configData, int* xpos_conn, double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
-	
     double power = configData.core.power;
     int limiter_flag = configData.core.limiter_flag;
     double vl_const = configData.core.vl_const;
