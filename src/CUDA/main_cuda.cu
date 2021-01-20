@@ -19,6 +19,7 @@
 #include "utils.hpp"
 #include "core_cuda.hpp"
 #include "point.hpp"
+#include "readHDF5.hpp"
 
 #define ARMA_DONT_PRINT_ERRORS
 using namespace arma;
@@ -30,6 +31,11 @@ typedef std::vector<double> vec_doub;
 typedef std::vector<long double> vec_ldoub;
 
 bool debug_mode = true; // Logging
+const bool HDF5_input = true;
+string file_path = "/home/hari/point.h5";
+string dataset_name = "/1/local"; // Generic format is   "/" + to_string(i+1) + "/local"
+string data_filename = "partGrid";
+string folder = "point/";
 
 /**
 * Driver function for the meshfree solver. Reads the Quadtree File Input, and Calls the test_code function.
@@ -74,55 +80,76 @@ int main(int argc, char **argv)
 
 void meshfree_solver(char* file_name, int max_iters)
 {
-
+	
 	Config configData = Config();
 	configData.setConfig();
 	if (debug_mode)
 		configData.printConfig();
 	std::string format = configData.format.type;
 	cout<<"\nFilename: "<<file_name<<endl;
+	double* result_doub_arr;
+	int numPoints;
+	int maxCol;
 
-	/* Read in numPoints from the point ditribution file */
-	int numPoints = 0;
-	std::fstream datafile(file_name, ios::in);
-	if(datafile.is_open())
-	{
-		std::string temp;
-		getline(datafile, temp);
-		std::stringstream num(temp);
-		num >> numPoints;	
-	}
-
-	/* Read datafile as a string, split using regex, and then convert to double/int/short. A bit tacky, but this parse method isn't essential for our benchmarking */
-	std::string temp;
-	std::string* new_file = new std::string[numPoints];
-	if(datafile.is_open())
-	{
-		for(int i=0; i<numPoints; i++)
+	#if 0
+		/* Read in numPoints from the point ditribution file */
+		int numPoints = 0;
+		std::fstream datafile(file_name, ios::in);
+		if(datafile.is_open())
 		{
-			getline(datafile, new_file[i]);
+			std::string temp;
+			getline(datafile, temp);
+			std::stringstream num(temp);
+			num >> numPoints;	
 		}
-	}
-	datafile.close();
-	cout<<"\nNo. of points: "<<numPoints<<endl;
-	std::regex ws_re("\\s+"); 
-	std::vector<vec_str> result;
-	for(int i=0; i<numPoints; i++)
-	{ 
-    	std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
-    	result.push_back(temp);
-	}
-	delete[] new_file; // Free up the space taken up by new_file
+
+		/* Read datafile as a string, split using regex, and then convert to double/int/short. A bit tacky, but this parse method isn't essential for our benchmarking */
+		std::string temp;
+		std::string* new_file = new std::string[numPoints];
+		if(datafile.is_open())
+		{
+			for(int i=0; i<numPoints; i++)
+			{
+				getline(datafile, new_file[i]);
+			}
+		}
+		datafile.close();
+		cout<<"\nNo. of points: "<<numPoints<<endl;
+		std::regex ws_re("\\s+"); 
+		std::vector<vec_str> result;
+		for(int i=0; i<numPoints; i++)
+		{ 
+			std::vector<std::string> temp{std::sregex_token_iterator(new_file[i].begin(), new_file[i].end(), ws_re, -1), {}};
+			result.push_back(temp);
+		}
+		delete[] new_file; // Free up the space taken up by new_file
+		std::vector<vec_doub> result_doub;
+		for(int j=0; j<numPoints; j++)
+		{
+			vec_doub temp;
+			for (int i=0; i<result[j].size(); i++)
+				temp.push_back(std::stod(result[j][i]));
+			result_doub.push_back(temp);
+
+		}
+		std::vector<vec_str>().swap(result); // Free up the space taken up by result
+
+	#endif
+
+	result_doub_arr = readHDF5file(file_path, dataset_name, data_filename, folder, result_doub_arr, numPoints, maxCol);
 	std::vector<vec_doub> result_doub;
 	for(int j=0; j<numPoints; j++)
-    {
+	{
 		vec_doub temp;
-		for (int i=0; i<result[j].size(); i++)
-			temp.push_back(std::stod(result[j][i]));
+		for (int i=0; i<maxCol; i++)
+			temp.push_back(result_doub_arr[j*maxCol + i]);
 		result_doub.push_back(temp);
-
 	}
-	std::vector<vec_str>().swap(result); // Free up the space taken up by result
+	
+	// printHDF5file(result_doub_arr, 10, 30);
+	// exit(0);
+
+	delete[] result_doub_arr; // Free up the space taken up by result_doub_arr
 
 	/* Allocate memory from the heap to store the point data */
 	Point* globaldata = new Point[numPoints];
@@ -146,7 +173,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	double defprimal[4];
 	getInitialPrimitive(configData, defprimal);
 
-	cout<<"\n-----Start Read-----\n"; // readFile function in Julia
+	cout<<"\n-----Start Read-----\n"; // 
 
 	//cout<<result_doub[0][0]<<endl;
 
