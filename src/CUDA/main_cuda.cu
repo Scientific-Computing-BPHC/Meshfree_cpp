@@ -32,7 +32,7 @@ typedef std::vector<long double> vec_ldoub;
 
 bool debug_mode = true; // Logging
 const bool HDF5_input = true;
-string file_path = "/home/hari/point.h5";
+string file_path = "/opt/grids/quadtree/hdf5/point_48738.h5";
 string dataset_name = "/1/local"; // Generic format is   "/" + to_string(i+1) + "/local"
 string data_filename = "partGrid";
 string folder = "point/";
@@ -146,20 +146,20 @@ void meshfree_solver(char* file_name, int max_iters)
 		result_doub.push_back(temp);
 	}
 	
-	// printHDF5file(result_doub_arr, 10, 30);
+	printHDF5file(result_doub_arr, 10, 30);
 	// exit(0);
 
 	delete[] result_doub_arr; // Free up the space taken up by result_doub_arr
 
 	/* Allocate memory from the heap to store the point data */
 	Point* globaldata = new Point[numPoints];
-	int* xpos_conn = new int[numPoints*20];
-	int* xneg_conn = new int[numPoints*20];
-	int* ypos_conn = new int[numPoints*20];
-	int* yneg_conn = new int[numPoints*20];
+	int* xpos_conn = new int[numPoints*30];
+	int* xneg_conn = new int[numPoints*30];
+	int* ypos_conn = new int[numPoints*30];
+	int* yneg_conn = new int[numPoints*30];
 	double res_old[1] = {0.0};
 
-	int* connec = new int[numPoints*20];
+	int* connec = new int[numPoints*30];
 
 	double* prim = new double[numPoints*4];
 	double* flux_res = new double[numPoints*4];
@@ -182,7 +182,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	#if 0
 		for(int idx=0; idx<numPoints; idx++)
 		{
-			int connectivity[20] = {0};
+			int connectivity[30] = {-1};
 			for(int iter=8; iter<result_doub[idx].size(); iter++)
 			{
 				connectivity[iter-8] = result_doub[idx][iter];
@@ -197,9 +197,9 @@ void meshfree_solver(char* file_name, int max_iters)
 			globaldata[idx].flag_2 = (int)result_doub[idx][5];
 			globaldata[idx].short_distance = result_doub[idx][6];
 			globaldata[idx].nbhs = (int)result_doub[idx][7];
-			for(int i=0; i<20; i++)
+			for(int i=0; i<30; i++)
 			{
-				connec[idx*20 +i] = connectivity[i];
+				connec[idx*30 +i] = connectivity[i];
 			}
 			globaldata[idx].nx = 0.0;
 			globaldata[idx].ny = 0.0;
@@ -220,12 +220,12 @@ void meshfree_solver(char* file_name, int max_iters)
 			globaldata[idx].yneg_nbhs = 0;
 			globaldata[idx].entropy = 0.0;
 			globaldata[idx].delta = 0.0;
-			for(int i=0; i<20; i++)
+			for(int i=0; i<30; i++)
 			{
-				xpos_conn[idx*20 + i] = 0;
-				xneg_conn[idx*20 + i] = 0;
-				ypos_conn[idx*20 + i] = 0;
-				yneg_conn[idx*20 + i] = 0; 
+				xpos_conn[idx*30 + i] = -1;
+				xneg_conn[idx*30 + i] = -1;
+				ypos_conn[idx*30 + i] = -1;
+				yneg_conn[idx*30 + i] = -1; 
 			}
 		}
 		cout<<"\n-----End Read-----\n";
@@ -234,27 +234,28 @@ void meshfree_solver(char* file_name, int max_iters)
 	/* Read File Quadtree */
 	for(int idx=0; idx<numPoints; idx++)
 	{
-		int connectivity[20] = {0};
-		for(int iter=11; iter<result_doub[idx].size(); iter++)
+		int connectivity[30] = {-1};
+		for(int iter=12; iter<result_doub[idx].size(); iter++)
 		{
-			connectivity[iter-11] = result_doub[idx][iter];
+			connectivity[iter-12] = result_doub[idx][iter];
 		}
- 	/* Assign values to each of the elements of global data and ensure the type specifications are adhered to */
-		globaldata[idx].localID = idx;
-		globaldata[idx].x = result_doub[idx][0];
-		globaldata[idx].y = result_doub[idx][1];
-		globaldata[idx].left = (int)result_doub[idx][2];
-		globaldata[idx].right = (int)result_doub[idx][3];
-		globaldata[idx].flag_1 = (int)result_doub[idx][4];
-		globaldata[idx].flag_2 = (int)result_doub[idx][5];
-		globaldata[idx].short_distance = result_doub[idx][9];
-		globaldata[idx].nbhs = (int)result_doub[idx][10];
-		for(int i=0; i<20; i++)
+	 /* Assign values to each of the elements of global data and ensure the type specifications are adhered to */
+	 // Quadtree depth is stored in result_doub[idx][8], but not necessary for our file format
+		globaldata[idx].localID = result_doub[idx][0];
+		globaldata[idx].x = result_doub[idx][1];
+		globaldata[idx].y = result_doub[idx][2];
+		globaldata[idx].left = (int)result_doub[idx][6];
+		globaldata[idx].right = (int)result_doub[idx][7];
+		globaldata[idx].flag_1 = (int)result_doub[idx][9];
+		globaldata[idx].flag_2 = (int)result_doub[idx][10];
+		globaldata[idx].short_distance = result_doub[idx][5];
+		globaldata[idx].nbhs = (int)result_doub[idx][11];
+		for(int i=0; i<30; i++)
 		{
-			connec[idx*20 +i] = connectivity[i];
+			connec[idx*30 +i] = connectivity[i];
 		}
-		globaldata[idx].nx = result_doub[idx][6];
-		globaldata[idx].ny = result_doub[idx][7];
+		globaldata[idx].nx = result_doub[idx][3];
+		globaldata[idx].ny = result_doub[idx][4];
 		for(int i=0; i<4; i++)
 		{
 			prim[idx*4 + i] = defprimal[i];
@@ -272,12 +273,12 @@ void meshfree_solver(char* file_name, int max_iters)
 		globaldata[idx].yneg_nbhs = 0;
 		globaldata[idx].entropy = 0.0;
 		globaldata[idx].delta = 0.0;
-		for(int i=0; i<20; i++)
+		for(int i=0; i<30; i++)
 		{
-			xpos_conn[idx*20 + i] = 0;
-			xneg_conn[idx*20 + i] = 0;
-			ypos_conn[idx*20 + i] = 0;
-			yneg_conn[idx*20 + i] = 0; 
+			xpos_conn[idx*30 + i] = -1;
+			xneg_conn[idx*30 + i] = -1;
+			ypos_conn[idx*30 + i] = -1;
+			yneg_conn[idx*30 + i] = -1; 
 		}
 	}
 	cout<<"\n-----End Read-----\n";
@@ -360,7 +361,7 @@ void run_code(Point* globaldata, Config configData, double res_old[1], int numPo
     double* res_sqr_d, *res_old_d;
     unsigned int mem_size_C = sizeof(double);
 	unsigned int mem_size_D = sizeof(double) * numPoints;
-	unsigned int mem_size_E = sizeof(int) * 20 * numPoints;
+	unsigned int mem_size_E = sizeof(int) * 30 * numPoints;
 	unsigned int mem_size_F = sizeof(double) * 4 * numPoints;
 	int* xpos_conn_d, *xneg_conn_d, *ypos_conn_d, *yneg_conn_d;
 	int* connec_d;

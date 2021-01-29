@@ -62,7 +62,7 @@ xy_tuple calculateNormals(xy_tuple left, xy_tuple right, double mx, double my)
 	double lx = std::get<0>(left);
 	double ly = std::get<1>(left);
 	double rx = std::get<0>(right);
-	double ry = std::get<1>(right);
+    double ry = std::get<1>(right);
 	double nx1 = my - ly;
 	double nx2 = ry - my;
 	double ny1 = mx - lx;
@@ -89,16 +89,16 @@ void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg
     int xneg_nbhs = 0;
     int ypos_nbhs = 0;
     int yneg_nbhs = 0; 
-    int xpos_conn_tmp[20] = {0};
-    int ypos_conn_tmp[20] = {0};
-    int xneg_conn_tmp[20] = {0};
-    int yneg_conn_tmp[20] = {0};
+    int xpos_conn_tmp[30] = {-1};
+    int ypos_conn_tmp[30] = {-1};
+    int xneg_conn_tmp[30] = {-1};
+    int yneg_conn_tmp[30] = {-1};
     
     /* Start Connectivity Generation */
-    for (int i=0; i<20; i++)
+    for (int i=0; i<30; i++)
     {
-    	int itm = connec[idx*20 +i];
-    	if (itm==0) 
+    	int itm = connec[idx*30 +i];
+    	if (itm==-1) 
     	{
     		break;
     	}
@@ -146,12 +146,12 @@ void calculateConnectivity(Point* globaldata, int idx, int* xpos_conn, int* xneg
     }
     /* End Connectivity Generation */
 
-    for(int i=0; i<20; i++)
+    for(int i=0; i<30; i++)
     {
-    	xpos_conn[idx*20 + i] = xpos_conn_tmp[i];
-    	xneg_conn[idx*20 + i] = xneg_conn_tmp[i];
-    	ypos_conn[idx*20 + i] = ypos_conn_tmp[i];
-    	yneg_conn[idx*20 + i] = yneg_conn_tmp[i];
+    	xpos_conn[idx*30 + i] = xpos_conn_tmp[i];
+    	xneg_conn[idx*30 + i] = xneg_conn_tmp[i];
+    	ypos_conn[idx*30 + i] = ypos_conn_tmp[i];
+    	yneg_conn[idx*30 + i] = yneg_conn_tmp[i];
     }
     globaldata[idx].xpos_nbhs = xpos_nbhs;
     globaldata[idx].xneg_nbhs = xneg_nbhs;
@@ -272,10 +272,10 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
             min_q_tmp[i] = q[idx*4 + i];
         }
         #pragma unroll
-        for(int i=0; i<20; i++)
+        for(int i=0; i<30; i++)
         {
-            int conn = connec[idx*20 + i];
-            if(conn == 0) 
+            int conn = connec[idx*30 + i];
+            if(conn == -1) 
             {
                 break;
             }
@@ -304,7 +304,7 @@ __global__ void q_var_derivatives_cuda(Point* globaldata, int numPoints, double 
                 {
                     max_q_tmp[j] = q[conn*4 + j];
                 }
-                if(min_q_tmp[j] > q[conn*4 + j])
+                if(min_q_tmp[-j] > q[conn*4 + j])
                 {
                     min_q_tmp[j] = q[conn*4 + j];
                 }
@@ -347,10 +347,10 @@ __global__ void q_var_derivatives_innerloop_cuda(Point* globaldata, int numPoint
             sig_del_y_del_q[i] = 0.0;
         }
         #pragma unroll
-        for(int i=0; i<20; i++)
+        for(int i=0; i<30; i++)
         {
-            int conn = connec[idx*20 + i];
-            if(conn == 0) break;
+            int conn = connec[idx*30 + i];
+            if(conn == -1) break;
             conn = conn - 1;
             double x_k = globaldata[conn].x;
             double y_k = globaldata[conn].y;

@@ -28,10 +28,10 @@ __device__ void interior_dGx_pos(Point* globaldata, int idx, double Gxp[4], doub
 	double tx = ny;
 	double ty = -nx;
 
-	for(int i=0; i<20; i++)
+	for(int i=0; i<30; i++)
 	{
-		int conn = xpos_conn[idx*20 + i];
-		if(conn == 0) break;
+		int conn = xpos_conn[idx*30 + i];
+		if(conn == -1) break;
 
 		conn = conn - 1;
 
@@ -87,10 +87,10 @@ __device__ void interior_dGx_neg(Point* globaldata, int idx, double Gxn[4], doub
 	double tx = ny;
 	double ty = -nx;
 
-	for(int i=0; i<20; i++)
+	for(int i=0; i<30; i++)
 	{
-		int conn = xneg_conn[idx*20 + i];
-		if(conn == 0) break;
+		int conn = xneg_conn[idx*30 + i];
+		if(conn == -1) break;
 
 		conn = conn - 1;
 
@@ -145,10 +145,10 @@ __device__ void interior_dGy_pos(Point* globaldata, int idx, double Gyp[4], doub
 	double tx = ny;
 	double ty = -nx;
 
-	for(int i=0; i<20; i++)
+	for(int i=0; i<30; i++)
 	{
-		int conn = ypos_conn[idx*20 + i];
-		if(conn == 0) break;
+		int conn = ypos_conn[idx*30 + i];
+		if(conn == -1) break;
 
 		conn = conn - 1;
 
@@ -205,10 +205,10 @@ __device__ void interior_dGy_neg(Point* globaldata, int idx,  double Gyn[4], dou
 	double tx = ny;
 	double ty = -nx;
 
-	for(int i=0; i<20; i++)
+	for(int i=0; i<30; i++)
 	{
-		int conn = yneg_conn[idx*20 + i];
-		if(conn == 0) break;
+		int conn = yneg_conn[idx*30 + i];
+		if(conn == -1) break;
 
 		conn = conn - 1;
 
