@@ -12,10 +12,10 @@ __global__ void call_func_delta_cuda(Point* globaldata, int numPoints, double cf
     if(idx < numPoints)
 	{
 		double min_delt = 1.0;
-		for(int i=0; i<20; i++)
+		for(int i=0; i<30; i++)
 		{
-			int conn = connec[idx*20 + i];
-			if (conn == 0) break;
+			int conn = connec[idx*30 + i];
+			if (conn == -1) break;
 
             conn = conn -1; 
 
