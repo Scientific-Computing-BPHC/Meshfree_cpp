@@ -22,3 +22,13 @@ void printConnectivity(int idx_low, int idx_high, int* xpos_conn, int* xneg_conn
         }
     }
 }
+
+__global__ void printFuncDelta(int idx_low, int idx_high, Point* globalData)
+{
+    cout<<"\n FuncDelta \n";
+    for(int i=idx_low; i<=idx_high; i++)
+    {
+        cout<<"Point: "<<i<<endl;
+        cout<<globalData[i].delta<<endl;
+    }
+}

@@ -33,7 +33,7 @@ __global__ void call_func_delta_cuda(Point* globaldata, int numPoints, double cf
 		}
 		globaldata[idx].delta = min_delt;
 		for(int i=0; i<4; i++)
-			prim_old[idx*4 + i] = prim[idx*4 + i];
+            prim_old[idx*4 + i] = prim[idx*4 + i];
 	}
 }
 

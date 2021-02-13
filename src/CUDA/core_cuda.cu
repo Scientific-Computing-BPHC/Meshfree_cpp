@@ -9,6 +9,9 @@
 #include "flux_residual_cuda.hpp"
 #include "utils.hpp"
 
+/* Debug Helper */
+#include "debug_meshfree.hpp"
+
 __device__ inline void q_var_derivatives_get_sum_delq_innerloop(Point* globaldata, int idx, int conn, double weights, double delta_x, double delta_y, \
     double qi_tilde[4], double qk_tilde[4], double sig_del_x_del_q[4], double sig_del_y_del_q[4], double* q, double* dq1, double* dq2);
 
@@ -175,6 +178,10 @@ void fpi_solver(int iter, Point* globaldata_d, Config configData, double* res_ol
     call_func_delta_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, cfl, threads, connec_d, prim_d, prim_old_d);
     cudaDeviceSynchronize();
 
+    // printFuncDelta<<<1, 1, 0, stream>>>(42, 45, globaldata_d);
+    // cudaDeviceSynchronize();
+    // exit(0);
+
     for(int rk=0; rk<rks; rk++)
     {
         call_rem_fpi_solver_cuda(globaldata_d, numPoints, power, tempdq_d, block_size, configData, res_old_d, res_sqr_d, iter, rk, rks, threads, \
@@ -191,12 +198,18 @@ void call_rem_fpi_solver_cuda(Point* globaldata_d, int numPoints, double power, 
 
     /* Make the kernel calls */
     q_variables_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, threads, prim_d, q_d);
+    print_qVar_cuda<<<1, 1, 0, stream>>>(42, 45, q_d);
     q_var_derivatives_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, threads, q_d, dq1_d, dq2_d, connec_d, max_q_d, min_q_d);
+    print_qVarDer_cuda<<<1, 1, 0, stream>>>(42, 45, dq1_d, dq2_d);
     for(int inner_iters=0; inner_iters<2; inner_iters++) // Basically, three inner iters
     {
         q_var_derivatives_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, power, tempdq_d, threads, connec_d, q_d, dq1_d, dq2_d);
         q_var_derivatives_update_innerloop_cuda<<<grid, threads, 0, stream>>>(globaldata_d, tempdq_d, threads, dq1_d, dq2_d);
     }
+    print_qVarDer_after_innerloop_cuda<<<1, 1, 0, stream>>>(42, 45, dq1_d, dq2_d);
+    printf("Stopping here");
+    cudaDeviceSynchronize();
+    exit(0);
     cal_flux_residual_cuda<<<grid, threads, 0, stream>>>(globaldata_d, numPoints, configData, threads, xpos_conn_d, xneg_conn_d, ypos_conn_d, yneg_conn_d, flux_res_d,\
     q_d, max_q_d, min_q_d, dq1_d, dq2_d);
     checkCudaErrors(cudaMemcpyAsync(res_old_d, res_old, mem_size_C, cudaMemcpyHostToDevice, stream)); 

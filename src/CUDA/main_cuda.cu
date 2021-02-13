@@ -343,16 +343,16 @@ void meshfree_solver(char* file_name, int max_iters)
 	for(int idx=0; idx<numPoints; idx++)
 		placeNormals(globaldata, idx, configData, interior, wall, outer);
 
-	printNormals(0, 20, globaldata);
+	// printNormals(0, 20, globaldata);
 
 	cout<<"\n-----Start Connectivity Generation-----\n";
 	for(int idx=0; idx<numPoints; idx++)
 		calculateConnectivity(globaldata, idx, xpos_conn, xneg_conn, ypos_conn, yneg_conn, connec);
 	cout<<"\n-----Connectivity Generation Done-----\n";  
 
-	printConnectivity(0, 5, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
-	cout<<"\n Stopping here";
-	exit(0);
+	// printConnectivity(0, 5, xpos_conn, xneg_conn, ypos_conn, yneg_conn);
+	// cout<<"\n Stopping here";
+	// exit(0);
 
 	cout<<"\n"<<max_iters<<endl;
 	test_code(globaldata, configData, res_old, numPoints, max_iters, xpos_conn, xneg_conn, ypos_conn, yneg_conn, connec, prim, flux_res, q, dq1, dq2, max_q, min_q, prim_old); 
