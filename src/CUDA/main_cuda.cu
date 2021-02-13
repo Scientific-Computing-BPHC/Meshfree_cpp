@@ -144,8 +144,8 @@ void meshfree_solver(char* file_name, int max_iters)
 	std::vector<vec_doub> result_doub;
 
 	cout<<"Max Col: "<<maxCol;
-	cout<<"\nSet Max Col: 20";
-	maxCol = 20;
+	cout<<"\nSet Max Col: 30";
+	maxCol = 30;	
 
 	for(int j=0; j<numPoints; j++)
 	{
@@ -155,8 +155,8 @@ void meshfree_solver(char* file_name, int max_iters)
 		result_doub.push_back(temp);
 	}
 
-	printHDF5file(result_doub_arr, 10, 20);
-	saveHDF5file(result_doub_arr, 48738, 20);
+		// printHDF5file(result_doub_arr, 10, 22);
+		// saveHDF5file(result_doub_arr, 48738, 22);
 	cout<<"\nSize of vec: "<<result_doub[0].size()<<" "<<result_doub[1].size()<<endl;
 
 	delete[] result_doub_arr; // Free up the space taken up by result_doub_arr
