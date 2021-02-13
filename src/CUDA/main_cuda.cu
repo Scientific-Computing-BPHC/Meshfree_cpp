@@ -156,6 +156,7 @@ void meshfree_solver(char* file_name, int max_iters)
 	}
 
 	printHDF5file(result_doub_arr, 10, 20);
+	saveHDF5file(result_doub_arr, 48738, 20);
 	cout<<"\nSize of vec: "<<result_doub[0].size()<<" "<<result_doub[1].size()<<endl;
 
 	delete[] result_doub_arr; // Free up the space taken up by result_doub_arr

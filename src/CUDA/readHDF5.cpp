@@ -10,6 +10,19 @@ void printHDF5file(double* result_doub_arr, int max_row, int max_col)
     }
 }
 
+void saveHDF5file(double* result_doub_arr, int max_row, int max_col)
+{
+    printf("\n \nSaving file....");
+    std::ofstream fout("HDF5file.txt");
+    for(int i=0; i<max_row; i++)
+    {
+        fout<<"\n";
+        for(int j=0; j<max_col; j++)
+            fout<<result_doub_arr[i*max_col + j]<<"  ";
+    }
+    fout.close();
+}
+
 double* readHDF5file(string file_path, string dataset_name, string data_filename, string folder, double* result_doub_arr, int& numPoints, int& maxCol)
 {
     const H5std_string FILE_NAME(file_path);
