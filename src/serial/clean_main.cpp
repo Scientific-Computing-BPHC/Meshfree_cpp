@@ -38,8 +38,8 @@ int main(int argc, char **argv)
 	printf("\nMeshfree AD\n");
 
 	/* initialize random seed*/
-	srand (time(NULL));
-	arma_rng::set_seed_random();
+	// srand (time(NULL));
+	// arma_rng::set_seed_random();
 
 	meshfree_solver(argv[1], std::stoi(argv[2])); //Warning: Casting from char to int loses precision
 	//Gotta see if maintaining a global array id efficient or if passing around by reference is efficient

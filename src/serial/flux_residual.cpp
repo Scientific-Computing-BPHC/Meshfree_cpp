@@ -48,6 +48,29 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 	{
 		globaldata[idx].flux_res[i] = Gtemp[i];
 	}
+
+	cout<<endl<<"Indic: "<<idx<<endl;
+	cout<<endl<<"Delta: "<<globaldata[idx].delta<<endl;
+
+	cout<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
+	}
+	cout<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
+	}
+
+	cout<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
+	}
+
+
+	
 }
 
 void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double Gxn[4], double Gyp[4], double Gyn[4], Config configData)

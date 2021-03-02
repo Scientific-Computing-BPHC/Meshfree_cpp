@@ -199,6 +199,8 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
     for(int rk=0; rk<rks; rk++)
     {
 
+        cout<<endl<<"Iter: "<<iter<<"rk: "<<rk<<endl;
+
         q_variables(globaldata, numPoints);
 
         q_var_derivatives(globaldata, numPoints, power);
