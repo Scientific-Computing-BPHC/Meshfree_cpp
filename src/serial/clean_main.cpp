@@ -35,7 +35,7 @@ void test_code(Point* globaldata, Config configData, double res_old[1], int numP
 
 int main(int argc, char **argv)
 {
-	printf("\nMeshfree AD\n");
+	printf("\nMeshfree Solver\n");
 
 	/* initialize random seed*/
 	// srand (time(NULL));
