@@ -26,15 +26,15 @@ void VLBroadcaster(double* q, double qtilde[4], double* max_q, double* min_q, do
 	for(int i=0; i<4; i++)
 	{
 
-		del_neg = qtilde[i] - q[i];
+		del_neg = qtilde[i] - q[index*4 + i];
 		if(abs(del_neg) <= 1e-5)
 			phi[i] = 1.0;
 		else if (abs(del_neg) > 1e-5)
 		{
 			if (del_neg > 0)
-				del_pos = max_q[i] - q[i];
+				del_pos = max_q[index*4 + i] - q[index*4 + i];
 			else if (del_neg < 0)
-				del_pos = min_q[i] - q[i];
+				del_pos = min_q[index*4 + i] - q[index*4 + i];
 
 			double num = (del_pos*del_pos) + (epsi*epsi);
 			num = (num*del_neg) + 2 * (del_neg*del_neg*del_pos);

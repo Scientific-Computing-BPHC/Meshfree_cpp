@@ -48,34 +48,34 @@ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData, 
 
 		conn = conn - 1;
 
-		cout<<endl<<"Conn: "<<conn<<endl;
+		// cout<<endl<<"Conn: "<<conn<<endl;
 
 		double delta_x, delta_y, delta_s_weights, delta_n_weights;
 		std::tie(delta_x, delta_y, delta_s_weights, delta_n_weights, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y) = connectivity_stats(x_i, y_i, nx, ny, power, globaldata[conn].x, globaldata[conn].y, sig_del_x_sqr, sig_del_y_sqr, sig_del_x_del_y);
 
-		cout<<endl<<" Idx: "<<idx<<endl;
-		for(int index = 0; index<4; index++)
-		{
-			cout<<std::fixed<<std::setprecision(17)<<phi_i[index]<<"   ";
-		}
-		for(int index = 0; index<4; index++)
-		{
-			cout<<std::fixed<<std::setprecision(17)<<phi_k[index]<<"   ";
-		}
-		cout<<"Delta x: "<<delta_x<<"  Delta y: "<<delta_y<<"  Delta s_wts: "<<delta_s_weights<<"  Delta n_wts: "<<delta_n_weights;
+		// cout<<endl<<" Idx: "<<idx<<endl;
+		// for(int index = 0; index<4; index++)
+		// {
+		// 	cout<<std::fixed<<std::setprecision(17)<<phi_i[index]<<"   ";
+		// }
+		// for(int index = 0; index<4; index++)
+		// {
+		// 	cout<<std::fixed<<std::setprecision(17)<<phi_k[index]<<"   ";
+		// }
+		//cout<<"Delta x: "<<delta_x<<"  Delta y: "<<delta_y<<"  Delta s_wts: "<<delta_s_weights<<"  Delta n_wts: "<<delta_n_weights;
 
 		calculate_qtile(qtilde_i, qtilde_k, globaldata, idx, conn, delta_x, delta_y, vl_const, gamma, limiter_flag, phi_i, phi_k, q, max_q, min_q, dq1, dq2);
 
 		
-		cout<<endl<<"Qtilde_i,k, Idx: "<<idx<<endl;
-		for(int index = 0; index<4; index++)
-		{
-			cout<<std::fixed<<std::setprecision(17)<<qtilde_i[index]<<"   ";
-		}
-		for(int index = 0; index<4; index++)
-		{
-			cout<<std::fixed<<std::setprecision(17)<<qtilde_k[index]<<"   ";
-		}
+		// cout<<endl<<"Qtilde_i,k, Idx: "<<idx<<endl;
+		// for(int index = 0; index<4; index++)
+		// {
+		// 	cout<<std::fixed<<std::setprecision(17)<<qtilde_i[index]<<"   ";
+		// }
+		// for(int index = 0; index<4; index++)
+		// {
+		// 	cout<<std::fixed<<std::setprecision(17)<<qtilde_k[index]<<"   ";
+		// }
 
 		qtilde_to_primitive(result, qtilde_i, gamma);
 
