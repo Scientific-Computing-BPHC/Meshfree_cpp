@@ -272,11 +272,11 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
 
         state_update(globaldata, numPoints, configData, iter, res_old, rk, rks, prim, prim_old, flux_res);
 
-        cout<<endl<<"prim: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<prim[46052*4 +index]<<"   ";
-        }
+        // cout<<endl<<"prim: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<prim[46052*4 +index]<<"   ";
+        // }
 
     }
 }
