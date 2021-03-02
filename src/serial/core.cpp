@@ -264,7 +264,7 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         cout<<endl<<"prim: "<<endl;
         for(int index = 0; index<4; index++)
         {
-            cout<<std::fixed<<std::setprecision(17)<<q[46052*4 +index]<<"   ";
+            cout<<std::fixed<<std::setprecision(17)<<prim[46052*4 +index]<<"   ";
         }
 
     }
