@@ -44,6 +44,24 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyn[i]) * 2;
+	
+	cout<<endl<<"Indic: "<<idx<<endl;
+	cout<<endl<<"Delta: "<<globaldata[idx].delta<<endl;
+	cout<<endl<<"Printing Gs: "<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
+	}
+	cout<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
+	}
+	cout<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
+	}
 
 }
 

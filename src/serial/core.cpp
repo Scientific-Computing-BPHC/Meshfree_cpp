@@ -203,61 +203,72 @@ void fpi_solver(int iter, Point* globaldata, Config configData, double res_old[1
         cout<<endl<<"Iter: "<<iter<<" rk: "<<rk<<endl;
         q_variables(globaldata, numPoints, prim, q);
 
-        cout<<endl<<"q: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<q[46052*4 +index]<<"   ";
-        }
+        // cout<<endl<<"q: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<q[46052*4 +index]<<"   ";
+        // }
 
-        cout<<endl<<"prim: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<prim[46052*4 +index]<<"   ";
-        }
+        // cout<<endl<<"prim: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<prim[46052*4 +index]<<"   ";
+        // }
         
         q_var_derivatives(globaldata, numPoints, power, q, dq1, dq2, connec, max_q, min_q);
 
-        cout<<endl<<"q: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<q[46052*4 +index]<<"   ";
-        }
-        cout<<endl<<"dq1: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<dq1[46052*4 + index]<<"   ";
-        }
-        cout<<endl<<"dq2: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<dq2[46052*4 + index]<<"   ";
-        }
-        cout<<endl;
+        // cout<<endl<<"q: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<q[46052*4 +index]<<"   ";
+        // }
+        // cout<<endl<<"dq1: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<dq1[46052*4 + index]<<"   ";
+        // }
+        // cout<<endl<<"dq2: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<dq2[46052*4 + index]<<"   ";
+        // }
+        // cout<<endl;
 
         for(int inner_iters=0; inner_iters<2; inner_iters++) // 3 inner iters
         {
             q_var_derivatives_innerloop(globaldata, numPoints, power, tempdq, connec, q, dq1, dq2);
         }
 
-        cout<<endl<<"dq1: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<dq1[46052*4 + index]<<"   ";
-        }
-        cout<<endl<<"dq2: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<dq2[46052*4 + index]<<"   ";
-        }
-        cout<<endl;
+        // cout<<endl<<"dq1: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<dq1[46052*4 + index]<<"   ";
+        // }
+        // cout<<endl<<"dq2: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<dq2[46052*4 + index]<<"   ";
+        // }
+        // cout<<endl;
         
         cal_flux_residual(globaldata, numPoints, configData, xpos_conn, xneg_conn, ypos_conn, yneg_conn, flux_res, q, max_q, min_q, dq1, dq2);
 
-        cout<<endl<<"flux_res: "<<endl;
-        for(int index = 0; index<4; index++)
-        {
-            cout<<std::fixed<<std::setprecision(17)<<flux_res[46052*4+index]<<"   ";
-        }
+        // cout<<endl<<"flux_res: "<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<flux_res[46052*4+index]<<"   ";
+        // }
+
+        // if (iter == 0 && rk == 1)
+        // for(int indic = 0; indic < numPoints; indic++)
+        // {   
+        //     cout<<endl<<"indic: "<<indic<<endl;
+        //     cout<<"flag: "<<globaldata[indic].flag_1<<endl;
+        //     for(int index = 0; index<4; index++)
+        //     {
+        //         cout<<std::fixed<<std::setprecision(17)<<flux_res[indic*4 + index]<<"   ";
+        //     }
+        // }
 
         state_update(globaldata, numPoints, configData, iter, res_old, rk, rks, prim, prim_old, flux_res);
 
