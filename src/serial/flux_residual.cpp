@@ -37,7 +37,7 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 	wall_dGx_neg(globaldata, idx, Gxn, configData);
 	wall_dGy_neg(globaldata, idx, Gyn, configData);
 
-	cout<<endl<<"Indic: "<<idx<<endl;
+	// cout<<endl<<"Indic: "<<idx<<endl;
 	// cout<<endl<<"Delta: "<<globaldata[idx].delta<<endl;
 	// cout<<endl<<"dqs: "<<endl;
 
