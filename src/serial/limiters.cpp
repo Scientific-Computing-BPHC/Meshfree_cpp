@@ -102,6 +102,7 @@ void calculate_qtile(double qtilde_i[4], double qtilde_k[4], Point* globaldata, 
                             double vl_const, double gamma, int limiter_flag, double phi_i[4], double phi_k[4], \
                             double* q, double* max_q, double* min_q, double* dq1, double* dq2)
 {
+
 	update_qtildes(qtilde_i, q, dq1, dq2, delta_x, delta_y, idx);
 	update_qtildes(qtilde_k, q, dq1, dq2, delta_x, delta_y, conn);
 
