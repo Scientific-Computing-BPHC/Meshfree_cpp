@@ -38,23 +38,34 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 	wall_dGy_neg(globaldata, idx, Gyn, configData);
 
 	cout<<endl<<"Indic: "<<idx<<endl;
-	cout<<endl<<"Delta: "<<globaldata[idx].delta<<endl;
-	cout<<endl<<"dqs: "<<endl;
+	// cout<<endl<<"Delta: "<<globaldata[idx].delta<<endl;
+	// cout<<endl<<"dqs: "<<endl;
 
-	for(int index = 0; index<4; index++)
-	{
-		cout<<std::fixed<<std::setprecision(17)<<globaldata[idx].dq1[index]<<"   ";
-	}
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<globaldata[idx].dq1[index]<<"   ";
+	// }
 
-	for(int index = 0; index<4; index++)
-	{
-		cout<<std::fixed<<std::setprecision(17)<<globaldata[idx].dq2[index]<<"   ";
-	}
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<globaldata[idx].dq2[index]<<"   ";
+	// }
+
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<globaldata[idx].max_q[index]<<"   ";
+	// }
+
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<globaldata[idx].min_q[index]<<"   ";
+	// }
+
 
 
 	double Gtemp[4] = {0};
 
-	cout<<endl<<"Gs: "<<endl;
+	// cout<<endl<<"Gs: "<<endl;
 
 	for(int i=0; i<4; i++)
 	{
@@ -66,22 +77,22 @@ void wallindices_flux_residual(Point* globaldata, int idx, double Gxp[4], double
 		globaldata[idx].flux_res[i] = Gtemp[i];
 	}
 
-	cout<<endl;
-	for(int index = 0; index<4; index++)
-	{
-		cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
-	}
-	cout<<endl;
-	for(int index = 0; index<4; index++)
-	{
-		cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
-	}
+	// cout<<endl;
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
+	// }
+	// cout<<endl;
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
+	// }
 
-	cout<<endl;
-	for(int index = 0; index<4; index++)
-	{
-		cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
-	}
+	// cout<<endl;
+	// for(int index = 0; index<4; index++)
+	// {
+	// 	cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
+	// }
 
 
 	

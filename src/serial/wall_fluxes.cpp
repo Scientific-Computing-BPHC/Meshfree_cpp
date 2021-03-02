@@ -59,7 +59,18 @@ void wall_dGx_pos(Point* globaldata, int idx, double Gxp[4], Config configData)
         flux_quad_GxII(G_k, nx, ny, result[0], result[1], result[2], result[3]);
 
         update_delf(sig_del_x_del_f, sig_del_y_del_f, G_k, G_i, delta_s_weights, delta_n_weights);
-     }
+    }
+	
+	cout<<endl<<"Qtilde_i,k, Idx: "<<idx<<endl;
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<qtilde_i[index]<<"   ";
+	}
+	for(int index = 0; index<4; index++)
+	{
+		cout<<std::fixed<<std::setprecision(17)<<qtilde_k[index]<<"   ";
+	}
+
 
     double det = sig_del_x_sqr * sig_del_y_sqr - sig_del_x_del_y * sig_del_x_del_y;
     double one_by_det = 1.0/det;
