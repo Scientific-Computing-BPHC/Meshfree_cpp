@@ -2,7 +2,7 @@
 #include<iostream>
 #include<math.h>
 #include <unistd.h> 
-#include <armadillo>
+// #include <armadillo>
 #include <fstream>
 #include<map>
 #include<string>
@@ -18,8 +18,8 @@
 #include "core.hpp"
 #include "point.hpp"
 
-#define ARMA_DONT_PRINT_ERRORS
-using namespace arma;
+// #define ARMA_DONT_PRINT_ERRORS
+// using namespace arma;
 
 typedef std::map<char, float> char_float_map;
 typedef std::map<char, double> char_double_map;
@@ -40,8 +40,8 @@ int main(int argc, char **argv)
 	printf("\nLeast Squares Kinetic Upwind Meshfree Solver (q-LSKUM)\n");
 
 	/* initialize random seed*/
-	srand (time(NULL));
-	arma_rng::set_seed_random();
+	// srand (time(NULL));
+	// arma_rng::set_seed_random();
 
 	meshfree_solver(argv[1], std::stoi(argv[2])); 
 	cout<<"\n Max Iters: "<<std::stoi(argv[2])<<endl;

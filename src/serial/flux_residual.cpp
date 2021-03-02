@@ -56,29 +56,29 @@ void outerindices_flux_residual(Point* globaldata, int idx, double Gxp[4], doubl
 	outer_dGy_pos(globaldata, idx, Gyp, configData, ypos_conn, q, max_q, min_q, dq1, dq2);
 
 
-	// if(idx == 1356)
-	// {
-	//     cout<<endl;
- //        for(int index = 0; index<4; index++)
- //        {
- //            cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
- //        }
- //        cout<<endl;
- //        for(int index = 0; index<4; index++)
- //        {
- //            cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
- //        }
- //        cout<<endl;
- //        for(int index = 0; index<4; index++)
- //        {
- //            cout<<std::fixed<<std::setprecision(17)<<Gyp[index]<<"   ";
- //        }
- //        // cout<<endl;
- //        // for(int index = 0; index<4; index++)
- //        // {
- //        //     cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
- //        // }
- //    }
+	if(idx == 1356)
+	{
+	    cout<<endl<<"For 1356, printing Gs: "<<endl;
+        for(int index = 0; index<4; index++)
+        {
+            cout<<std::fixed<<std::setprecision(17)<<Gxp[index]<<"   ";
+        }
+        cout<<endl;
+        for(int index = 0; index<4; index++)
+        {
+            cout<<std::fixed<<std::setprecision(17)<<Gxn[index]<<"   ";
+        }
+        cout<<endl;
+        for(int index = 0; index<4; index++)
+        {
+            cout<<std::fixed<<std::setprecision(17)<<Gyp[index]<<"   ";
+        }
+        // cout<<endl;
+        // for(int index = 0; index<4; index++)
+        // {
+        //     cout<<std::fixed<<std::setprecision(17)<<Gyn[index]<<"   ";
+        // }
+    }
 
 	for(int i=0; i<4; i++)
 		flux_res[idx*4 + i] = globaldata[idx].delta * (Gxp[i] + Gxn[i] + Gyp[i]);
